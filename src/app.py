@@ -10,7 +10,7 @@ from kivy.uix.label import Label
 from kivy.uix.screenmanager import Screen, ScreenManager
 from kivy.uix.slider import Slider
 from kivy.uix.textinput import TextInput
-from .server import server_starter
+from server import server_starter
 import multiprocessing
 import threading
 import time

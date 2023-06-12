@@ -6,7 +6,7 @@ import copy
 import locale
 import os
 import gettext
-from .parser import parse_package
+from parser import parse_package
 
 
 clients = {}
