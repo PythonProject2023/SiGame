@@ -29,7 +29,6 @@ class TestApp(unittest.TestCase):
         f = app.choose_button('прекрасный дагестан', 300)
         f('')
         exp_call = [unittest.mock.call(("choose 'прекрасный дагестан' 300\n").encode())]
-        print(self.sock.call_count)
         self.sock.send.assert_has_calls(exp_call)
         
     def test_2_answer_button(self):
@@ -48,7 +47,6 @@ class TestApp(unittest.TestCase):
         f = app.accept_button('test')
         f()
         exp_call = [unittest.mock.call(("verdict accept test\n").encode())]
-        print(self.sock.call_count)
         self.sock.send.assert_has_calls(exp_call)
 
 
