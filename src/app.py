@@ -11,7 +11,7 @@ from kivy.uix.screenmanager import Screen, ScreenManager
 from kivy.uix.slider import Slider
 from kivy.uix.textinput import TextInput
 from functools import partial
-from .server import server_starter
+from server import server_starter
 import multiprocessing
 import threading
 import time
@@ -118,7 +118,7 @@ class CreateGame(Screen):
         server_proc.start()
         time.sleep(0.3)
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.connect(('localhost', 2000))
+        sock.connect(('localhost', 1321))
         sock.send(("master__oogway\n").encode())
         res = sock.recv(4096)
         sock.send((password + '\n').encode())
@@ -163,7 +163,7 @@ class JoinGame(Screen):
         password = self.password.text
         player_name = self.player_name.text
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.connect(('localhost', 2000))
+        sock.connect(('localhost', 1321))
         sock.send((f"{player_name}\n").encode())
         res = sock.recv(4096).decode()
         if res == 'sorry':
@@ -764,3 +764,6 @@ class MyApp(App):
 
         for child in widget.children:
             self.update_text(child) 
+
+def main():
+    MyApp().run()
