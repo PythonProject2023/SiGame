@@ -77,6 +77,14 @@ class Answer:
         :return: ссылка на видео ответа.
         """
         return self.video
+        
+    def __eq__(self, other):
+        return ((self.right == other.right) and
+              (self.wrong == other.wrong) and
+              (self.text == other.text) and
+              (self.image == other.image) and
+              (self.sound == other.sound) and
+              (self.video == other.video))
 
 
 class Question:
@@ -152,6 +160,14 @@ class Question:
         :return: объект - ответ на вопрос.
         """
         return self.ans
+        
+    def __eq__(self, other):
+        return ((self.price == other.price) and
+              (self.text == other.text) and
+              (self.image == other.image) and 
+              (self.sound == other.sound) and 
+              (self.video == other.video) and
+              (self.ans == other.ans))
 
 
 class Theme:
@@ -188,6 +204,10 @@ class Theme:
 
     def __str__(self):
         return self.name
+        
+    def __eq__(self, other):
+        return ((self.name == other.name) and
+                (self.questions == other.questions))
 
 
 class Round:
@@ -224,6 +244,10 @@ class Round:
 
     def __str__(self):
         return self.name
+        
+    def __eq__(self, other):
+        return ((self.name == other.name) and
+                (self.themes == other.themes))
 
 
 class Package:
@@ -274,6 +298,10 @@ class Package:
 
     def __str__(self):
         return f"{self.author}\n\n" + '\n'.join(str(i) for i in self.rounds)
+        
+    def __eq__(self, other):
+        return ((self.author == other.author)
+                and (self.rounds == other.rounds))
 
 
 def parse_package(packet_path):
