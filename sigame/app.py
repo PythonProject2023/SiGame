@@ -1,4 +1,3 @@
-
 """App interface and network client implementation."""
 
 import kivy
