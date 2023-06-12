@@ -9,6 +9,30 @@ from kivy.uix.slider import Slider
 from kivy.uix.textinput import TextInput
 
 
+# сокет
+sock = None
+# словарь с виджетами
+widgets = None
+# параметры игры, которые приедут от сервера
+game_params = None
+# количество очков за выбранный вопрос
+active_score = 0
+# количество игроков, которые уже получили отказ (для ведущего)
+reject_counts = 0
+# флаг, определяющий есть в игре активный вопрос или нет (для игрока)
+flag_passive = True
+# флаг, который блокирует/разблокирует работу таймера
+flag_timer = False
+# флаг, который завершает работу треда с таймером
+finish_flag = False
+server_proc = None
+red = [1, 0, 0, 1] 
+green = [0, 1, 0, 1] 
+blue = [0, 0, 1, 1] 
+purple = [1, 0, 1, 1]
+white = [1, 1, 1, 1]
+
+
 class MainMenu(Screen):
     def __init__(self, **kwargs):
         super(MainMenu, self).__init__(**kwargs)
