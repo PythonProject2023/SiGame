@@ -37,6 +37,12 @@ class TestApp(unittest.TestCase):
         f()
         exp_call = [unittest.mock.call(("answer test text\n").encode())]
         self.sock.send.assert_has_calls(exp_call)
+        
+    def test_3_reject_button(self):
+        f = app.reject_button('test')
+        f()
+        exp_call = [unittest.mock.call(("verdict reject test 1\n").encode())]
+        self.sock.send.assert_has_calls(exp_call)
 
 
 class TestParser(unittest.TestCase):
