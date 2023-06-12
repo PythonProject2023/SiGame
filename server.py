@@ -38,7 +38,52 @@ def get_round(package_path):
     return (cur_table, table_size)
 
 async def SIG(reader, writer):
-	pass
+	"""Функция, реализуящая функциональности сервера.
+
+    Организует запуск на выполнение принимаемых от пользователя команд,
+    а также посылает ответы пользователю или широковещательные сообщения.
+    """
+    global clients, master, password, game_params, question_counter, target_questions, p_path
+    to_login = asyncio.create_task(reader.readline())
+    res = await to_login
+    to_pass = asyncio.create_task(reader.readline())
+    res.decode()[:-1]
+    name = res.decode()[:-1]
+
+    if len(clients) == 0:
+        master = name
+
+    if name in clients:
+        writer.write(("sorry").encode())
+        await writer.drain()
+        return False
+    else:
+        writer.write(("hello").encode())
+        await writer.drain()
+
+    res = await to_pass
+    to_get = asyncio.create_task(reader.readline())
+    got_password = res.decode()[:-1]
+    if got_password == password:
+        for cur_name in clients:
+            await clients[cur_name].put(f'connect {name}')
+        writer.write(("hello").encode())
+        await writer.drain()
+    else:
+        writer.write(("sorry").encode())
+        await writer.drain()
+        return False
+
+    game_params['players'].append(name)
+    await to_get
+    writer.write(str(game_params).encode())
+    await writer.drain()   
+    clients[name] = asyncio.Queue()
+
+    # создаем два задания: на чтение и на запись
+    send = asyncio.create_task(reader.readline())
+    receive = asyncio.create_task(clients[name].get())
+
 
 async def main(game_name, real_password, package_path, players_count):
     """Запуск сервера."""
