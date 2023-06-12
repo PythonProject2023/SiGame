@@ -129,7 +129,8 @@ class JoinGame(Screen):
         self.game_name = TextInput(multiline=False)
         self.layout.add_widget(self.game_name)
 
-        self.layout.add_widget(Label(text="Пароль:", font_size=20))
+        self.password_label = Label(text="Пароль:", font_size=20)
+        self.layout.add_widget(self.password_label)
         self.password = TextInput(multiline=False, password=True)
         self.layout.add_widget(self.password)
 
@@ -174,8 +175,197 @@ class JoinGame(Screen):
                 self.manager.current = "game"
 
 
-class Game(Screen):
-    pass
+class Game(Screen): 
+    def __init__(self, master, player_name, **kwargs):
+        global widgets, game_params
+        # Установка соединения с сервером
+        super(Game, self).__init__(**kwargs)
+        # присваиваме ГЛОБАЛЬНОЙ переменной widgets шаблонный вид.
+        # Далее, перед добавлением любого виджета на какой-либо layout 
+        # он будет добавляться в какую-то ячейку словаря widgets
+        widgets = {'buttons': {}, 'labels': {}, 'text_fields': {}, 'layouts': {}}
+        layout = BoxLayout(orientation='vertical')
+        # текущий список игроков, включая ведущего и нас
+        players = game_params["players"]
+        # колво игроков
+        cur_players = len(players)
+        # максимально допустимое число игроков (указано при создании пати)
+        players_count = game_params["players_count"]
+        players_layout = GridLayout(rows=2, cols=players_count+1, spacing=10)
+        for p in range(players_count):
+            # если текущий индекс есть в фактическом массиве игроков,
+            # то берем имя от туда, иначе шаблон: "player_i"
+            if p < cur_players:
+                cur_text = players[p]
+            else:
+                cur_text = f"player_{p}"
+            # Лейблы с именами игроков
+            cur_label = Label(text=cur_text, font_size=20)
+            widgets['labels'].setdefault('players', {})
+            widgets['labels']['players'][cur_text] = cur_label
+            players_layout.add_widget(cur_label) #name
+
+        button_exit = Button(
+                    text='Exit',
+                    background_color = 'red',
+                    on_release=self.switch_to_screen(master),
+                )
+        players_layout.add_widget(button_exit)
+        
+        for p in range(players_count):
+            # То же самое, что и предыдущий виджет, но для лейблов с очками
+            if p < cur_players:
+                cur_text = players[p]
+                game_params["cur_players"].append(cur_text)
+            else:
+                cur_text = f"player_{p}"
+                game_params["cur_players"].append(None)
+            cur_label = Label(text='0', font_size=20)
+            widgets['labels'].setdefault('scores', {})
+            widgets['labels']['scores'][cur_text] = cur_label
+            players_layout.add_widget(cur_label) #score
+            
+        game_field = GridLayout(cols=2, padding=10, spacing=10)
+        q_table = GridLayout(cols=game_params['table_size'][1]+1, padding=10, spacing=10)
+        # Локаль
+        q_label = Label(text='Ищи вопрос тут', font_size=40)
+        for th in game_params['table']:
+            # Лейблы с названиями тем
+            cur_label = Label(text=th, font_size=20)
+            cur_label.text_size = cur_label.size
+            widgets['buttons'].setdefault('questions', {})
+            widgets['labels'].setdefault('themes', {})
+            widgets['labels']['themes'][th] = cur_label
+            q_table.add_widget(cur_label)
+            for q in game_params['table'][th]:
+                if master:
+                    but_func = empty_func
+                else:
+                    but_func = choose_button(th, q)
+                # Кнопки с ценами вопросов
+                button = Button(
+                    text=str(q),
+                    size_hint=(1, 0.2),
+                    on_release=but_func,
+                )
+                widgets['buttons']['questions'].setdefault(th, {})
+                widgets['buttons']['questions'][th][str(q)] = button
+                q_table.add_widget(button)
+            tmp_cost = -1
+            for _ in range(len(game_params['table'][th]), game_params['table_size'][1]):
+                button = Button(text = '', on_release = empty_func)
+                widgets['buttons']['questions'][th][str(tmp_cost)] = button
+                q_table.add_widget(button)
+                tmp_cost -=1
+        tmp_name = -1
+        print("COMPARE:", len(game_params['table']),  game_params['table_size'][0])
+        for _ in range(len(game_params['table']),  game_params['table_size'][0]):
+            cur_label = Label(text='', font_size=20)
+            cur_label.text_size = cur_label.size
+            widgets['buttons'].setdefault('questions', {})
+            widgets['labels'].setdefault('themes', {})
+            widgets['labels']['themes'][str(tmp_name)] = cur_label
+            q_table.add_widget(cur_label)
+            tmp_cost = -1
+            for _ in range(game_params['table_size'][1]):
+                button = Button(
+                    text='',
+                    size_hint=(1, 0.2),
+                    on_release=empty_func,
+                )
+                widgets['buttons']['questions'].setdefault(str(tmp_name), {})
+                widgets['buttons']['questions'][str(tmp_name)][str(q)] = button
+                q_table.add_widget(button)
+                tmp_cost -= 1
+            tmp_name -= 1
+
+
+        widgets['labels']['q_label'] = q_label
+        widgets['layouts']['table'] = q_table
+        game_field.add_widget(q_table)
+        game_field.add_widget(q_label)
+        
+        gamer_tools = BoxLayout(orientation='horizontal')
+        # Лейбл для вывода сообщений через "info:"
+        timer = Label(text='00:00', size=(10,10))
+        widgets['labels']['timer'] = timer
+        gamer_tools.add_widget(timer)
+        info = Label(text='info:', size=(10,10))
+        widgets['labels']['info'] = info
+        gamer_tools.add_widget(info)
+        
+        if master:
+            # Для окна ведущего
+            answers = BoxLayout(orientation='vertical')
+            # Лейбл на котором будет отображаться верный ответ
+            # Локаль
+            right_ans = Label(text='Верный ответ:')
+            widgets['labels']['right_ans'] = right_ans
+            answers.add_widget(right_ans)
+            # Лейбл на котором будет отображаться текущий ответ игрока
+            # Локаль
+            curr_ans = Label(text='Ответ игрока')
+            widgets['labels']['curr_ans'] = curr_ans
+            answers.add_widget(curr_ans)
+            gamer_tools.add_widget(answers)
+            
+            buttons = BoxLayout(orientation='vertical')
+            # Кнопка для принятия ответа
+            # Локаль
+            button_accept = Button(text='Принять', background_color = red)
+            widgets['buttons']['accept'] = button_accept
+            buttons.add_widget(button_accept)
+            # Кнопка для отклонения ответа
+            # Локаль
+            button_reject = Button(text='Отклонить', background_color = red)
+            widgets['buttons']['reject'] = button_reject
+            buttons.add_widget(button_reject)
+            gamer_tools.add_widget(buttons)
+        else:
+            #Для окна игрока
+            # кнопка для отправки ответа
+            ans_button = Button(text='', background_color = red)
+            widgets['buttons']['answer'] = ans_button
+            gamer_tools.add_widget(ans_button)
+            # Поле для ввода ответа
+            ans_field = TextInput(background_color=(0, 0, 0, 1/255), readonly=True)
+            widgets['text_fields']['answer'] = ans_field
+            gamer_tools.add_widget(ans_field)
+        
+        layout.add_widget(players_layout)
+        layout.add_widget(game_field)
+        layout.add_widget(gamer_tools)
+        widgets['layouts']['players'] = players_layout
+        widgets['layouts']['game'] = game_field
+        widgets['layouts']['tools'] = gamer_tools
+        widgets['layouts']['main'] = layout
+        self.add_widget(layout)
+        # для ведущего своя функция-reader
+        if master:
+            self.reader_thread = threading.Thread(target = master_read, daemon = True)
+        else:
+            self.reader_thread = threading.Thread(target = client_read, args = (player_name,), daemon = True)
+        self.reader_thread.start()
+        self.timer_thread = threading.Thread(target = timer_func, args = (master,), daemon = True)
+        self.timer_thread.start()
+
+    
+    def switch_to_screen(self, master):
+        def switch(*args):
+            global sock, finish_flag, server_proc
+            finish_flag = True
+            self.reader_thread.join()
+            self.timer_thread.join()
+            sock.shutdown(socket.SHUT_RDWR)
+            sock.close()
+            if master:
+                server_proc.kill()
+
+            
+            self.manager.current = 'main_menu'
+            if self.manager.has_screen('game'):
+               self.manager.remove_widget(self.manager.get_screen('game'))
+        return switch
 
 
 class Rules(Screen):
