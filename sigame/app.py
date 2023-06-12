@@ -181,22 +181,35 @@ class JoinGame(Screen):
         self.on_pre_enter = App.get_running_app().update_text
         self.layout = GridLayout(cols=2, padding=10, spacing=10)
 
-        self.layout.add_widget(Label(text="Название игры:", font_size=20))
-        self.game_name = TextInput(multiline=False)
+        self.layout.add_widget(Label(text="Название игры:", font_size=40, color=LIGHT_ORANGE))
+        self.layout.add_widget(Label(text=' '))
+        self.game_name = TextInput(multiline=False, font_size=40, halign='center')
         self.layout.add_widget(self.game_name)
+        self.layout.add_widget(Label(text=' '))
 
-        self.password_label = Label(text="Пароль:", font_size=20)
+        self.password_label = Label(text="Пароль:", font_size=40, color=LIGHT_ORANGE)
         self.layout.add_widget(self.password_label)
-        self.password = TextInput(multiline=False, password=True)
+        self.layout.add_widget(Label(text=' '))
+        self.password = TextInput(multiline=False, password=True, font_size=40, halign='center')
         self.layout.add_widget(self.password)
+        self.layout.add_widget(Label(text=' '))
 
-        self.layout.add_widget(Label(text="Ваше имя:", font_size=20))
-        self.player_name = TextInput(multiline=False)
+        self.layout.add_widget(Label(text="Ваше имя:", font_size=40, color=LIGHT_ORANGE))
+        self.layout.add_widget(Label(text=' '))
+        self.player_name = TextInput(multiline=False, font_size=40, halign='center')
         self.layout.add_widget(self.player_name)
+        self.layout.add_widget(Label(text=' '))
 
-        self.join_button = Button(text="Присоединиться", on_release=self.join_game)
+        self.join_button = Button(
+                text="Присоединиться", 
+                on_release=self.join_game,
+                background_normal='',
+                background_color=LIGHT_ORANGE,
+                color=BLUE,
+                font_size=40
+            )
         self.layout.add_widget(self.join_button)
-        self.layout.add_widget(Label())
+        self.layout.add_widget(Label(text=' '))
 
         self.add_widget(self.layout)
 
