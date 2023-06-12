@@ -61,7 +61,7 @@ class MainMenu(Screen):
         super(MainMenu, self).__init__(**kwargs)
         self.layout = BoxLayout(orientation="vertical", padding=100, spacing=20)
         self.layout.add_widget(Label(text="Своя игра", font_size=120, color=ORANGE, size_hint=(0.3, 0.9)))
-        self.layout.add_widget(Label(text="", font_size=120, color=ORANGE, size_hint=(0.2, 0.2)))
+        self.layout.add_widget(Label(text=" ", font_size=120, color=ORANGE, size_hint=(0.2, 0.2)))
         self.buttons = [
             ("Создать игру", self.switch_to_screen, ["create_game"]),
             ("Присоединиться к игре", self.switch_to_screen, ["join_game"]),
@@ -100,30 +100,48 @@ class CreateGame(Screen):
     def __init__(self, **kwargs):
         """Создает виджеты для экрана создания игры."""
         super(CreateGame, self).__init__(**kwargs)
-        self.on_pre_enter = App.get_running_app().update_text
-        self.layout = GridLayout(cols=2, padding=10, spacing=10)
+        self.layout = GridLayout(cols=2, padding=15, spacing=15)
 
-        self.layout.add_widget(Label(text="Название игры:", font_size=20))
-        self.game_name = TextInput(multiline=False)
+        self.layout.add_widget(Label(text="Название игры:", font_size=40, color=LIGHT_ORANGE))
+        self.layout.add_widget(Label(text=' '))
+        self.game_name = TextInput(multiline=False, font_size=40, halign='center')
         self.layout.add_widget(self.game_name)
+        self.layout.add_widget(Label(text=' '))
 
-        self.layout.add_widget(Label(text="Пароль:", font_size=20))
-        self.password = TextInput(multiline=False, password=True)
+        self.layout.add_widget(Label(text="Пароль:", font_size=40, color=LIGHT_ORANGE))
+        self.layout.add_widget(Label(text=' '))
+        self.password = TextInput(multiline=False, password=True, font_size=40, halign='center')
         self.layout.add_widget(self.password)
+        self.layout.add_widget(Label(text=' '))
 
-        self.layout.add_widget(Label(text="Количество игроков:", font_size=20))
-        self.players_slider = Slider(min=2, max=5, value=2, step=1)
+        self.layout.add_widget(Label(text="Количество игроков:", font_size=40, color=LIGHT_ORANGE))
+        self.layout.add_widget(Label(text=' '))
+        self.players_slider = Slider(
+                min=2, max=5, 
+                value=2, step=1, 
+                value_track=True, 
+                value_track_color=BLUE,
+                value_track_width='9dp'
+            )
         self.layout.add_widget(self.players_slider)
+        self.layout.add_widget(Label(text=' '))
 
-        self.layout.add_widget(Label(text="Прикрепить пакет:", font_size=20))
-        self.package_path = TextInput(multiline=False)
+        self.layout.add_widget(Label(text="Прикрепить пакет:", font_size=40, color=LIGHT_ORANGE))
+        self.layout.add_widget(Label(text=' '))
+        self.package_path = TextInput(multiline=False, font_size=40, halign='center')
         self.layout.add_widget(self.package_path)
+        self.layout.add_widget(Label(text=' '))
 
         self.create_room_button = Button(
-            text="Создать комнату", on_release=self.create_room
+            text="Создать комнату", 
+            on_release=self.create_room,
+            background_normal='',
+            background_color=LIGHT_ORANGE,
+            color=BLUE,
+            font_size=40
         )
         self.layout.add_widget(self.create_room_button)
-        self.layout.add_widget(Label())
+        self.layout.add_widget(Label(text=' '))
 
         self.add_widget(self.layout)
 
