@@ -39,7 +39,47 @@ class MainMenu(Screen):
 
 
 class CreateGame(Screen):
-    pass
+    def __init__(self, **kwargs):
+        super(CreateGame, self).__init__(**kwargs)
+        self.layout = GridLayout(cols=2, padding=10, spacing=10)
+
+        self.layout.add_widget(Label(text='Название игры:', font_size=20))
+        self.game_name = TextInput(multiline=False)
+        self.layout.add_widget(self.game_name)
+
+        self.layout.add_widget(Label(text='Пароль:', font_size=20))
+        self.password = TextInput(multiline=False, password=True)
+        self.layout.add_widget(self.password)
+
+        self.layout.add_widget(Label(text='Количество игроков:', font_size=20))
+        self.players_slider = Slider(min=2, max=5, value=2, step=1)
+        self.layout.add_widget(self.players_slider)
+
+        self.layout.add_widget(Label(text='Прикрепить пакет:', font_size=20))
+        self.package_path = TextInput(multiline=False)
+        self.layout.add_widget(self.package_path)
+
+        self.create_room_button = Button(text='Создать комнату', on_release=self.create_room)
+        self.layout.add_widget(self.create_room_button)
+        self.layout.add_widget(Label())  
+
+        self.add_widget(self.layout)
+
+    def create_room(self, *args):
+        game_name = self.game_name.text
+        password = self.password.text
+        players_count = int(self.players_slider.value)
+        package_path = self.package_path.text
+
+        # создание комнаты
+        print("Создание комнаты")
+        print(f"Название игры: {game_name}")
+        print(f"Пароль: {password}")
+        print(f"Количество игроков: {players_count}")
+        print(f"Путь к пакету: {package_path}")
+
+        # Переход на экран игры после создания комнаты
+        self.manager.current = 'game'     
         
         
 class JoinGame(Screen):
