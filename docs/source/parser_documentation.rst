@@ -1,6 +1,6 @@
 Техническая документация парсера
 ================================
 
-.. automodule:: parser
+.. automodule:: sigame.parser
    :members:
    :private-members:

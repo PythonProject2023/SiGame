@@ -16,8 +16,14 @@ dependencies = ["kivy >= 2.1.0"]
 repository = "https://github.com/PythonProject2023/SiGame"
 
 [build-system]
-requires = ["alabaster", "Babel", "build", "doit", "flake8", "pybabel", "pycodestyle", "pydocstyle", "pyflakes", "setuptools", "Sphinx", "kivy"]
+requires = ["alabaster", "Babel", "build", "doit", "flake8", "pybabel", "pycodestyle", "pydocstyle", "pyflakes", "setuptools", "Sphinx", "kivy", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project.scripts]
-sigame = "app:main"
+sigame = "sigame.app:main"
+
+[tool.setuptools.package-dir]
+sigame = "sigame"
+
+[tool.setuptools.package-data]
+sigame = ["locale/ru/LC_MESSAGES/myapp.mo", "locale/en/LC_MESSAGES/myapp.mo"]

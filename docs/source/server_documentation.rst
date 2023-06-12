@@ -1,6 +1,6 @@
 Техническая документация сервера
 ================================
 
-.. automodule:: server
+.. automodule:: sigame.server
    :members:
    :private-members:
