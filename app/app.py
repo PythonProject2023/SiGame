@@ -72,19 +72,27 @@ class CreateGame(Screen):
         self.add_widget(self.layout)
 
     def create_room(self, *args):
+        global sock, game_params, server_proc
         game_name = self.game_name.text
         password = self.password.text
         players_count = int(self.players_slider.value)
         package_path = self.package_path.text
-
         # создание комнаты
-        print("Создание комнаты")
-        print(f"Название игры: {game_name}")
-        print(f"Пароль: {password}")
-        print(f"Количество игроков: {players_count}")
-        print(f"Путь к пакету: {package_path}")
-
-        # Переход на экран игры после создания комнаты
+        server_proc = multiprocessing.Process(target = server_starter, args=(game_name, password, package_path, players_count))
+        server_proc.start()
+        time.sleep(0.3)
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.connect(('localhost', 1350))
+        sock.send(("master__oogway\n").encode())
+        res = sock.recv(4096)
+        sock.send((password + '\n').encode())
+        res = sock.recv(4096)
+        sock.send(('give me a pack' + '\n').encode())
+        # Получаем от сервера строку с описанем игры
+        game_params = eval(sock.recv(8192).decode())
+        game_params['cur_players'] = []
+        self.manager.add_widget(Game(True, "master__oogway", name="game"))
+        # Переход на экран игры после присоединения к комнате
         self.manager.current = "game"
 
 
@@ -112,16 +120,34 @@ class JoinGame(Screen):
         self.add_widget(self.layout)
 
     def join_game(self, *args):
+        global game_params, sock
         game_name = self.game_name.text
         password = self.password.text
         player_name = self.player_name.text
-
-        print("Присоединение к игре")
-        print(f"Название игры: {game_name}")
-        print(f"Пароль: {password}")
-        print(f"Ваше имя: {player_name}")
-
-        self.manager.current = "game"
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.connect(('localhost', 1350))
+        sock.send((f"{player_name}\n").encode())
+        res = sock.recv(4096).decode()
+        if res == 'sorry':
+            sock.shutdown(socket.SHUT_RDWR)
+            sock.close()
+        else:
+            sock.send((password + '\n').encode())
+            res = sock.recv(4096).decode()
+            # Если пароль неверен, то здесь в res будет "sorry" вместо "hello"
+            if res == 'sorry':
+                sock.shutdown(socket.SHUT_RDWR)
+                sock.close()
+                self.password_label.text = "Пароль: (Был введен неверный)"
+                self.password_label.color = 'red'
+            else:
+                sock.send(('give me a pack' + '\n').encode())
+                # Получаем от сервера строку с описанем игры
+                game_params = eval(sock.recv(8192).decode())
+                game_params['cur_players'] = []
+                self.manager.add_widget(Game(False, player_name, name="game"))
+                # Переход на экран игры после присоединения к комнате
+                self.manager.current = "game"
 
 
 class Game(Screen):
