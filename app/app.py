@@ -175,6 +175,75 @@ class JoinGame(Screen):
                 self.manager.current = "game"
 
 
+def empty_func(*args):
+    """пустышка: ставится в обработчик кнопки, если ее надо "деактивировать"""
+    pass
+
+
+def choose_button(th, q):
+    """генератор функций для кнопок с ценами вопросов"""
+    def func(arg):
+        # это будет происходить, если нажать на кнопку
+        # p.s. flag_passive=True если сейчас нет активного вопроса и False иначе
+        global sock, flag_passive
+        if flag_passive:
+            request = f"choose '{th}' {q}"
+            print(f"CLIENT {request}")
+            sock.send((request+'\n').encode())
+    return func
+
+
+def answer_button(player_name):
+    """генератор функций для кнопок ответа пользователя"""
+    global widgets
+    def func():
+        # это будет происходить, если нажать на кнопку
+        global sock
+        request = f"answer {player_name} {widgets['text_fields']['answer'].text}"
+        widgets['text_fields']['answer'].background_color = (0, 0, 0, 1/255)
+        widgets['text_fields']['answer'].text = ''
+        widgets['buttons']['answer'].background_color = red
+        widgets['buttons']['answer'].text = ''
+        widgets['text_fields']['answer'].readonly = True
+        new_func = empty_func
+        widgets['buttons']['answer'].on_release = new_func
+        sock.send((request+'\n').encode())
+    return func
+
+
+def reject_button(player_name):
+    """Генератор функции для кнопки 'отказа' у ведущего"""
+    global widgets
+    def func():
+        # это будет происходить, если нажать на кнопку
+        global sock, reject_counts
+        reject_counts += 1
+        widgets['labels']['curr_ans'].text = ""
+        widgets['buttons']['accept'].on_release = empty_func
+        widgets['buttons']['accept'].background_color = red
+        widgets['buttons']['reject'].on_release = empty_func
+        widgets['buttons']['reject'].background_color = red
+        request = f"verdict reject {player_name} {reject_counts}"
+        sock.send((request+'\n').encode())
+    return func
+
+
+def accept_button(player_name):
+    """Генератор функции для кнопки 'принятия' у ведущего"""
+    global widgets
+    def func():
+        # это будет происходить, если нажать на кнопку
+        global sock
+        widgets['labels']['curr_ans'].text = ""
+        widgets['buttons']['accept'].on_release = empty_func
+        widgets['buttons']['accept'].background_color = red
+        widgets['buttons']['reject'].on_release = empty_func
+        widgets['buttons']['reject'].background_color = red
+        request = f"verdict accept {player_name}"
+        sock.send((request+'\n').encode())
+    return func
+
+
 class Game(Screen): 
     def __init__(self, master, player_name, **kwargs):
         global widgets, game_params
