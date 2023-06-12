@@ -516,7 +516,7 @@ class Game(Screen):
         global widgets, game_params
         # Установка соединения с сервером
         super(Game, self).__init__(**kwargs)
-        self.on_pre_enter = App.get_running_app().update_text
+        self.on_pre_enter = partial(App.get_running_app().update_text, self)
         # присваиваме ГЛОБАЛЬНОЙ переменной widgets шаблонный вид.
         # Далее, перед добавлением любого виджета на какой-либо layout 
         # он будет добавляться в какую-то ячейку словаря widgets
