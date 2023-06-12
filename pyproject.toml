@@ -1,0 +1,23 @@
+[project]
+name = "SiGame"
+version = "0.0.1"
+description = "Intellectual game"
+requires-python = ">=3.10"
+authors = [{name = "AKIM", email = "example@mail.com"}]
+keywords = ["SiGame", "project", "kivy"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Programming Language :: Python :: 3",
+]
+
+dependencies = ["kivy >= 2.1.0"]
+
+[project.urls]
+repository = "https://github.com/PythonProject2023/SiGame"
+
+[build-system]
+requires = ["alabaster", "Babel", "build", "doit", "flake8", "pybabel", "pycodestyle", "pydocstyle", "pyflakes", "setuptools", "Sphinx", "kivy"]
+build-backend = "setuptools.build_meta"
+
+[project.scripts]
+sigame = "app:main"
