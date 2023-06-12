@@ -7,6 +7,31 @@ import sys
 import socket
 import io
 import sigame.parser as parser 
+import sigame.app as app
+
+
+class TestApp(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        cls.sock = MagicMock(spec=socket.socket)
+        cls.sock.send.return_value = cls.sock
+        socket.socket = MagicMock(return_value=cls.sock)
+        app.sock = cls.sock
+        app.widgets = {'text_fields': {'answer': Button(text='text')},
+                        'labels': {'curr_ans': Label(text='')},
+                        'buttons': {'accept': Button(text=''),
+                                    'reject': Button(text=''),
+                                    'answer': Button(text='')}}
+        app.reject_counts = 0
+
+    def test_1_choose_button(self):
+        f = app.choose_button('прекрасный дагестан', 300)
+        f('')
+        exp_call = [unittest.mock.call(("choose 'прекрасный дагестан' 300\n").encode())]
+        print(self.sock.call_count)
+        self.sock.send.assert_has_calls(exp_call)
+
 
 class TestParser(unittest.TestCase):
     def test_1(self):
