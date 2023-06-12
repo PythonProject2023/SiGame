@@ -21,6 +21,8 @@ import socket
 import shlex
 import gettext
 import os
+from kivy.core.window import Window
+Window.clearcolor = (4/255, 81/255, 116/255, 1)
 
 
 # сокет
@@ -40,11 +42,15 @@ flag_timer = False
 # флаг, который завершает работу треда с таймером
 finish_flag = False
 server_proc = None
-red = [1, 0, 0, 1]
-green = [0, 1, 0, 1]
-blue = [0, 0, 1, 1]
+RED = (237/255, 23/255, 23/255, 1)
+green = [0, 1, 0, 1] 
+blue = [0, 0, 1, 1] 
 purple = [1, 0, 1, 1]
 white = [1, 1, 1, 1]
+ORANGE=(250/255, 153/255, 57/255, 1)
+LIGHT_ORANGE = (248/255, 220/255, 191/255, 1)
+BLUE = (0, 31/255, 61/255, 1)
+LIGHT_BLUE = (4/255, 81/255, 116/255, 1)
 
 
 class MainMenu(Screen):
@@ -53,9 +59,9 @@ class MainMenu(Screen):
     def __init__(self, **kwargs):
         """Создает виджеты для главного меню."""
         super(MainMenu, self).__init__(**kwargs)
-        self.layout = BoxLayout(orientation="vertical")
-        self.layout.add_widget(Label(text="Своя игра", font_size=40))
-
+        self.layout = BoxLayout(orientation="vertical", padding=100, spacing=20)
+        self.layout.add_widget(Label(text="Своя игра", font_size=120, color=ORANGE, size_hint=(0.3, 0.9)))
+        self.layout.add_widget(Label(text="", font_size=120, color=ORANGE, size_hint=(0.2, 0.2)))
         self.buttons = [
             ("Создать игру", self.switch_to_screen, ["create_game"]),
             ("Присоединиться к игре", self.switch_to_screen, ["join_game"]),
@@ -67,8 +73,12 @@ class MainMenu(Screen):
         for text, func, args in self.buttons:
             button = Button(
                 text=text,
-                size_hint=(1, 0.2),
-                on_release=func(*args)
+                size_hint=(0.3, 0.2),
+                on_release=func(*args),
+                background_normal='',
+                background_color=LIGHT_ORANGE,
+                color=BLUE,
+                font_size=40
             )
             self.layout.add_widget(button)
 
@@ -193,7 +203,7 @@ class JoinGame(Screen):
                 sock.shutdown(socket.SHUT_RDWR)
                 sock.close()
                 self.password_label.text = f"{_('Пароль')}: {_('Был введен неверный')}"
-                self.password_label.color = 'red'
+                self.password_label.color = RED
             else:
                 sock.send(('give me a pack' + '\n').encode())
                 # Получаем от сервера строку с описанем игры
@@ -234,7 +244,7 @@ def answer_button(player_name):
         request = f"answer {player_name} {widgets['text_fields']['answer'].text}"
         widgets['text_fields']['answer'].background_color = (0, 0, 0, 1 / 255)
         widgets['text_fields']['answer'].text = ''
-        widgets['buttons']['answer'].background_color = red
+        widgets['buttons']['answer'].background_color = RED
         widgets['buttons']['answer'].text = ''
         widgets['text_fields']['answer'].readonly = True
         new_func = empty_func
@@ -253,9 +263,9 @@ def reject_button(player_name):
         reject_counts += 1
         widgets['labels']['curr_ans'].text = ""
         widgets['buttons']['accept'].on_release = empty_func
-        widgets['buttons']['accept'].background_color = red
+        widgets['buttons']['accept'].background_color = RED
         widgets['buttons']['reject'].on_release = empty_func
-        widgets['buttons']['reject'].background_color = red
+        widgets['buttons']['reject'].background_color = RED
         request = f"verdict reject {player_name} {reject_counts}"
         sock.send((request + '\n').encode())
     return func
@@ -270,9 +280,9 @@ def accept_button(player_name):
         global sock
         widgets['labels']['curr_ans'].text = ""
         widgets['buttons']['accept'].on_release = empty_func
-        widgets['buttons']['accept'].background_color = red
+        widgets['buttons']['accept'].background_color = RED
         widgets['buttons']['reject'].on_release = empty_func
-        widgets['buttons']['reject'].background_color = red
+        widgets['buttons']['reject'].background_color = RED
         request = f"verdict accept {player_name}"
         sock.send((request + '\n').encode())
     return func
@@ -318,7 +328,7 @@ def client_read(player_name):
             # answer - res[0] <имя ответчика> - res[1] <сам по себе ответ> - res[2]
                 flag_timer = False
                 if res[1] != player_name:
-                    widgets['buttons']['answer'].background_color = red
+                    widgets['buttons']['answer'].background_color = RED
                     widgets['buttons']['answer'].on_release = empty_func
                     widgets['labels']['info'].text = f"{_('Игрок')} {res[1]} {_('ответил')}: {res[2]}"
                     widgets['labels']['info'].text_size = widgets['labels']['info'].size
@@ -338,7 +348,7 @@ def client_read(player_name):
                     widgets['labels']['scores'][res[2]].text = str(new_score)
                     widgets['text_fields']['answer'].background_color = (0, 0, 0, 1 / 255)
                     widgets['text_fields']['answer'].text = ''
-                    widgets['buttons']['answer'].background_color = red
+                    widgets['buttons']['answer'].background_color = RED
                     widgets['buttons']['answer'].text = ''
                     widgets['text_fields']['answer'].readonly = True
                     new_func = empty_func
@@ -367,7 +377,7 @@ def client_read(player_name):
                         widgets['labels']['q_label'].text = ""
                         widgets['text_fields']['answer'].background_color = (0, 0, 0, 1 / 255)
                         widgets['text_fields']['answer'].text = ''
-                        widgets['buttons']['answer'].background_color = red
+                        widgets['buttons']['answer'].background_color = RED
                         widgets['buttons']['answer'].text = ''
                         widgets['text_fields']['answer'].readonly = True
                         new_func = empty_func
@@ -398,7 +408,7 @@ def client_read(player_name):
                 widgets['labels']['q_label'].text = ""
                 widgets['text_fields']['answer'].background_color = (0, 0, 0, 1 / 255)
                 widgets['text_fields']['answer'].text = ''
-                widgets['buttons']['answer'].background_color = red
+                widgets['buttons']['answer'].background_color = RED
                 widgets['buttons']['answer'].text = ''
                 widgets['text_fields']['answer'].readonly = True
                 new_func = empty_func
@@ -570,7 +580,7 @@ class Game(Screen):
 
         button_exit = Button(
             text='Exit',
-            background_color='red',
+            background_color=RED,
             on_release=self.switch_to_screen(master),)
         players_layout.add_widget(button_exit)
 
@@ -672,19 +682,19 @@ class Game(Screen):
             buttons = BoxLayout(orientation='vertical')
             # Кнопка для принятия ответа
             # Локаль
-            button_accept = Button(text='Принять', background_color=red)
+            button_accept = Button(text='Принять', background_color=RED)
             widgets['buttons']['accept'] = button_accept
             buttons.add_widget(button_accept)
             # Кнопка для отклонения ответа
             # Локаль
-            button_reject = Button(text='Отклонить', background_color=red)
+            button_reject = Button(text='Отклонить', background_color=RED)
             widgets['buttons']['reject'] = button_reject
             buttons.add_widget(button_reject)
             gamer_tools.add_widget(buttons)
         else:
             # Для окна игрока
             # кнопка для отправки ответа
-            ans_button = Button(text='', background_color=red)
+            ans_button = Button(text='', background_color=RED)
             widgets['buttons']['answer'] = ans_button
             gamer_tools.add_widget(ans_button)
             # Поле для ввода ответа
