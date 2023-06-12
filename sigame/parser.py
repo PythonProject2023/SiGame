@@ -1,14 +1,12 @@
-"""
-Парсер пакета.
-"""
+"""Парсер пакета."""
+
 import zipfile
 import xml.etree.ElementTree as ET
 import urllib.parse
 
 
 class Answer:
-    """
-    Класс ответа на вопрос.
+    """Класс ответа на вопрос.
 
     :param right: верный ответ на вопрос.
     :type right: str
@@ -21,7 +19,7 @@ class Answer:
     :param sound: ссылка на звук ответа.
     :type sound: str
     :param video: ссылка на видео ответа.
-    :type video: str
+    :type video: str.
     """
 
     def __init__(self, right, wrong=None, text=None, image=None, sound=None, video=None):
@@ -33,18 +31,15 @@ class Answer:
         self.video = urllib.parse.quote(video.encode('utf-8')) if video is not None else None
 
     def get_right(self):
-        """
-        Получение правильного ответа.
+        """Получение правильного ответа.
 
         :rtype: str
         :return: правильный ответ.
         """
-
         return self.right
 
     def get_wrong(self):
-        """
-        Получение неправильного ответа.
+        """Получение неправильного ответа.
 
         :rtype: str
         :return: неправильный ответ.
@@ -52,49 +47,40 @@ class Answer:
         return self.wrong
 
     def get_text(self):
-        """
-        Получение текста ответа.
+        """Получение текста ответа.
 
         :rtype: str
         :return: текст ответа.
         """
-
         return self.text
 
     def get_image(self):
-        """
-        Получение ссылки на картинку ответа.
+        """Получение ссылки на картинку ответа.
 
         :rtype: str
         :return: ссылка на картинку ответа.
         """
-
         return self.image
 
     def get_sound(self):
-        """
-        Получение ссылки на звук ответа.
+        """Получение ссылки на звук ответа.
 
         :rtype: str
         :return: ссылка на звук ответа.
         """
-
         return self.sound
 
     def get_video(self):
-        """
-        Получение ссылки на видео ответа.
+        """Получение ссылки на видео ответа.
 
         :rtype: str
         :return: ссылка на видео ответа.
         """
-
         return self.video
 
 
 class Question:
-    """
-    Класс вопроса.
+    """Класс вопроса.
 
     :param price: стоимость вопроса.
     :type price: str
@@ -105,7 +91,7 @@ class Question:
     :param sound: ссылка на звук вопроса.
     :type sound: str
     :param video: ссылка на видео вопроса.
-    :type video: str
+    :type video: str.
     """
 
     def __init__(self, price, text=None, image=None, sound=None, video=None):
@@ -116,81 +102,65 @@ class Question:
         self.video = urllib.parse.quote(video.encode('utf-8')) if video is not None else None
 
     def get_price(self):
-        """
-        Получение стоимости вопроса.
+        """Получение стоимости вопроса.
 
         :rtype: str
         :return: стоимость вопроса.
         """
-
         return self.price
 
     def get_text(self):
-        """
-        Получение текста вопроса.
+        """Получение текста вопроса.
 
         :rtype: str
         :return: текст вопроса.
         """
-
         return self.text
 
     def get_image(self):
-        """
-        Получение ссылки на картинку вопроса.
+        """Получение ссылки на картинку вопроса.
 
         :rtype: str
         :return: ссылка на картинку вопроса.
         """
-
         return self.image
 
     def get_sound(self):
-        """
-        Получение ссылки на звук вопроса.
+        """Получение ссылки на звук вопроса.
 
         :rtype: str
         :return: ссылка на звук вопроса.
         """
-
         return self.sound
 
     def get_video(self):
-        """
-        Получение ссылки на видео вопроса.
+        """Получение ссылки на видео вопроса.
 
         :rtype: str
         :return: ссылка на видео вопроса.
         """
-
         return self.video
 
     def add_answer(self, ans):
-        """
-        Добавление ответа на вопрос.
-        """
-
+        """Добавление ответа на вопрос."""
         self.ans = ans
 
     def get_answer(self):
-        """
-        Получение ответа на вопрос.
+        """Получение ответа на вопрос.
 
         :rtype: Answer
         :return: объект - ответ на вопрос.
         """
-
         return self.ans
 
 
 class Theme:
-    """
-    Тема вопросов.
+    """Тема вопросов.
 
     :param name: название темы.
     :type name: str
     :param questions: словарь вопросов.
-    :type questions: dict
+    :type questions: dict.
     """
 
     def __init__(self, name):
@@ -198,17 +168,15 @@ class Theme:
         self.questions = dict()
 
     def add_question(self, q):
-        """
-        Добавление вопроса.
+        """Добавление вопроса.
 
         :param q: объект - вопрос.
-        :type q: Question
+        :type q: Question.
         """
         self.questions[q.get_price()] = q
 
     def get_question(self, p):
-        """
-        Получение вопроса.
+        """Получение вопроса.
 
         :param p: стоимость вопроса.
         :type p: str
@@ -216,7 +184,6 @@ class Theme:
         :rtype: Question
         :return: объект - вопрос.
         """
-
         return self.questions[p]
 
     def __str__(self):
@@ -224,13 +191,12 @@ class Theme:
 
 
 class Round:
-    """
-    Раунд.
+    """Раунд.
 
     :param name: название раунда.
     :type name: str
     :param themes: темы вопросов.
-    :type themes: dict
+    :type themes: dict.
     """
 
     def __init__(self, name):
@@ -238,18 +204,15 @@ class Round:
         self.themes = dict()
 
     def add_theme(self, t):
-        """
-        Добавление темы.
+        """Добавление темы.
 
         :param t: тема.
         :type t: Theme
         """
-
         self.themes[str(t)] = t
 
     def get_theme(self, nm):
-        """
-        Получение темы.
+        """Получение темы.
 
         :param nm: название темы.
         :type nm: str
@@ -257,7 +220,6 @@ class Round:
         :rtype: Theme
         :return: объект - тема.
         """
-
         return self.themes[nm]
 
     def __str__(self):
@@ -265,8 +227,7 @@ class Round:
 
 
 class Package:
-    """
-    Пакет вопросов.
+    """Пакет вопросов.
 
     :param author: автор пакета.
     :type author: str
@@ -278,18 +239,15 @@ class Package:
     rounds = list()
 
     def set_author(self, a):
-        """
-        Добавление автора.
+        """Добавление автора.
 
         :param a: автор.
         :type a: str
         """
-
         self.author = a
 
     def get_author(self):
-        """
-        Получение автора.
+        """Получение автора.
 
         :rtype: str
         :return: автор.
@@ -297,8 +255,7 @@ class Package:
         return self.author
 
     def add_round(self, rnd):
-        """
-        Добавление раунда.
+        """Добавление раунда.
 
         :param rnd: раунд.
         :type rnd: Round
@@ -306,15 +263,13 @@ class Package:
         self.rounds.append(rnd)
 
     def get_round(self, num):
-        """
-        Получение раунда.
+        """Получение раунда.
 
         :param num: номер раунда.
         :type num: int
         :rtype: Round
         :return: раунд.
         """
-
         return self.rounds[num]
 
     def __str__(self):
@@ -322,8 +277,7 @@ class Package:
 
 
 def parse_package(packet_path):
-    """
-    Парсинг пакета.
+    """Парсинг пакета.
 
     :param packet_path: путь к файлу-пакету.
     :type packet_path: str
@@ -331,7 +285,6 @@ def parse_package(packet_path):
     :rtype: Package
     :return: пакет.
     """
-
     with zipfile.ZipFile(packet_path) as file:
         with file.open('content.xml') as xml_file:
             tree = ET.parse(xml_file)

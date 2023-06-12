@@ -1,3 +1,6 @@
+
+"""App interface and network client implementation."""
+
 import kivy
 
 kivy.require('2.1.0')
@@ -38,15 +41,18 @@ flag_timer = False
 # флаг, который завершает работу треда с таймером
 finish_flag = False
 server_proc = None
-red = [1, 0, 0, 1] 
-green = [0, 1, 0, 1] 
-blue = [0, 0, 1, 1] 
+red = [1, 0, 0, 1]
+green = [0, 1, 0, 1]
+blue = [0, 0, 1, 1]
 purple = [1, 0, 1, 1]
 white = [1, 1, 1, 1]
 
 
 class MainMenu(Screen):
+    """Класс-экран с главным меню."""
+
     def __init__(self, **kwargs):
+        """Создает виджеты для главного меню."""
         super(MainMenu, self).__init__(**kwargs)
         self.layout = BoxLayout(orientation="vertical")
         self.layout.add_widget(Label(text="Своя игра", font_size=40))
@@ -56,7 +62,7 @@ class MainMenu(Screen):
             ("Присоединиться к игре", self.switch_to_screen, ["join_game"]),
             ("Правила", self.switch_to_screen, ["rules"]),
             ("Сменить язык", lambda: App.get_running_app().switch_lang, []),
-            ("Выход",  self.switch_to_screen, ["exit"]),
+            ("Выход", self.switch_to_screen, ["exit"]),
         ]
 
         for text, func, args in self.buttons:
@@ -70,6 +76,7 @@ class MainMenu(Screen):
         self.add_widget(self.layout)
 
     def switch_to_screen(self, screen_name):
+        """Функция, меняющая текущий экран при нажатии на кнопку."""
         def switch(*args):
             if screen_name == "exit":
                 App.get_running_app().stop()
@@ -79,7 +86,10 @@ class MainMenu(Screen):
 
 
 class CreateGame(Screen):
+    """Класс-экран создания игры."""
+
     def __init__(self, **kwargs):
+        """Создает виджеты для экрана создания игры."""
         super(CreateGame, self).__init__(**kwargs)
         self.on_pre_enter = App.get_running_app().update_text
         self.layout = GridLayout(cols=2, padding=10, spacing=10)
@@ -109,21 +119,23 @@ class CreateGame(Screen):
         self.add_widget(self.layout)
 
     def create_room(self, *args):
+        """Функция для кнопки создания игры."""
         global sock, game_params, server_proc
         game_name = self.game_name.text
         password = self.password.text
         players_count = int(self.players_slider.value)
         package_path = self.package_path.text
         # создание комнаты
-        server_proc = multiprocessing.Process(target = server_starter, args=(game_name, password, package_path, players_count))
+        server_proc = multiprocessing.Process(target=server_starter,
+                                              args=(game_name, password, package_path, players_count))
         server_proc.start()
         time.sleep(0.3)
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.connect(('localhost', 1321))
         sock.send(("master__oogway\n").encode())
-        res = sock.recv(4096)
+        sock.recv(4096)
         sock.send((password + '\n').encode())
-        res = sock.recv(4096)
+        sock.recv(4096)
         sock.send(('give me a pack' + '\n').encode())
         # Получаем от сервера строку с описанем игры
         game_params = eval(sock.recv(8192).decode())
@@ -134,7 +146,10 @@ class CreateGame(Screen):
 
 
 class JoinGame(Screen):
+    """Класс-экран для присоединения к игре."""
+
     def __init__(self, **kwargs):
+        """Содает виджеты для экрана присоединения к игре."""
         super(JoinGame, self).__init__(**kwargs)
         self.on_pre_enter = App.get_running_app().update_text
         self.layout = GridLayout(cols=2, padding=10, spacing=10)
@@ -159,8 +174,9 @@ class JoinGame(Screen):
         self.add_widget(self.layout)
 
     def join_game(self, *args):
+        """Функция для кнопки присоединения к игре."""
         global game_params, sock
-        game_name = self.game_name.text
+        # game_name = self.game_name.text
         password = self.password.text
         player_name = self.player_name.text
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -190,11 +206,13 @@ class JoinGame(Screen):
 
 
 def empty_func(*args):
-    """пустышка: ставится в обработчик кнопки, если ее надо "деактивировать"""
+    """пустышка: ставится в обработчик кнопки, если ее надо деактивировать."""
     pass
 
+
 def choose_button(th, q):
-    """генератор функций для кнопок с ценами вопросов"""
+    """генератор функций для кнопок с ценами вопросов."""
+
     def func(arg):
         # это будет происходить, если нажать на кнопку
         # p.s. flag_passive=True если сейчас нет активного вопроса и False иначе
@@ -202,31 +220,34 @@ def choose_button(th, q):
         if flag_passive:
             request = f"choose '{th}' {q}"
             print(f"CLIENT {request}")
-            sock.send((request+'\n').encode())
+            sock.send((request + '\n').encode())
+
     return func
 
 
 def answer_button(player_name):
-    """генератор функций для кнопок ответа пользователя"""
+    """генератор функций для кнопок ответа пользователя."""
     global widgets
+
     def func():
         # это будет происходить, если нажать на кнопку
         global sock
         request = f"answer {player_name} {widgets['text_fields']['answer'].text}"
-        widgets['text_fields']['answer'].background_color = (0, 0, 0, 1/255)
+        widgets['text_fields']['answer'].background_color = (0, 0, 0, 1 / 255)
         widgets['text_fields']['answer'].text = ''
         widgets['buttons']['answer'].background_color = red
         widgets['buttons']['answer'].text = ''
         widgets['text_fields']['answer'].readonly = True
         new_func = empty_func
         widgets['buttons']['answer'].on_release = new_func
-        sock.send((request+'\n').encode())
+        sock.send((request + '\n').encode())
     return func
 
 
 def reject_button(player_name):
-    """Генератор функции для кнопки 'отказа' у ведущего"""
+    """Генератор функции для кнопки 'отказа' у ведущего."""
     global widgets
+
     def func():
         # это будет происходить, если нажать на кнопку
         global sock, reject_counts
@@ -237,13 +258,14 @@ def reject_button(player_name):
         widgets['buttons']['reject'].on_release = empty_func
         widgets['buttons']['reject'].background_color = red
         request = f"verdict reject {player_name} {reject_counts}"
-        sock.send((request+'\n').encode())
+        sock.send((request + '\n').encode())
     return func
 
 
 def accept_button(player_name):
-    """Генератор функции для кнопки 'принятия' у ведущего"""
+    """Генератор функции для кнопки 'принятия' у ведущего."""
     global widgets
+
     def func():
         # это будет происходить, если нажать на кнопку
         global sock
@@ -253,19 +275,18 @@ def accept_button(player_name):
         widgets['buttons']['reject'].on_release = empty_func
         widgets['buttons']['reject'].background_color = red
         request = f"verdict accept {player_name}"
-        sock.send((request+'\n').encode())
+        sock.send((request + '\n').encode())
     return func
 
 
 def client_read(player_name):
-    """Функция, читающая из сокета и меняющая интерфейс
-      в соответсвии с получаемыми сообщениями (для обычных игроков)"""
+    """Функция, читающая из сокета и меняющая интерфейс в соответсвии с сообщениями от сервера."""
     global sock, widgets, game_params, active_score, flag_passive, flag_timer
     time.sleep(0.1)
     while True:
         # получаем сообщение и разбиавем его на части
         res = sock.recv(8192)
-        res_str= res.decode()
+        res_str = res.decode()
         res = shlex.split(res_str)
         match res[0]:
             case "choose":
@@ -305,7 +326,7 @@ def client_read(player_name):
             case "verdict":
             # сообщение от сервера начинается с verdict, если ведущий нажал на кнопку принять или отклонить
             # общий формат сообщения от сервера следующий:
-            # verdict - res[0] <accept/reject> - res[1] <имя игрока> - res[2] 
+            # verdict - res[0] <accept/reject> - res[1] <имя игрока> - res[2]
                 if res[1] == 'accept':
                     flag_passive = True
                     widgets['labels']['q_label'].text = ""
@@ -316,7 +337,7 @@ def client_read(player_name):
                     widgets['labels']['info'].text_size = widgets['labels']['info'].size
                     new_score = int(widgets['labels']['scores'][res[2]].text) + int(active_score)
                     widgets['labels']['scores'][res[2]].text = str(new_score)
-                    widgets['text_fields']['answer'].background_color = (0, 0, 0, 1/255)
+                    widgets['text_fields']['answer'].background_color = (0, 0, 0, 1 / 255)
                     widgets['text_fields']['answer'].text = ''
                     widgets['buttons']['answer'].background_color = red
                     widgets['buttons']['answer'].text = ''
@@ -337,15 +358,15 @@ def client_read(player_name):
                             widgets['buttons']['answer'].on_release = new_func
                     widgets['labels']['info'].text_size = widgets['labels']['info'].size
                     if None in game_params['cur_players']:
-                        check_ind = game_params['cur_players'].index(None)-1
+                        check_ind = game_params['cur_players'].index(None) - 1
                     else:
-                        check_ind = game_params['players_count']-1
-                    # res[3] есть только в случае rejecta и в нем 
+                        check_ind = game_params['players_count'] - 1
+                    # res[3] есть только в случае rejecta и в нем
                     # содержится счетчик reject_counts от сервера
                     if check_ind == int(res[3]):
                         flag_passive = True
                         widgets['labels']['q_label'].text = ""
-                        widgets['text_fields']['answer'].background_color = (0, 0, 0, 1/255)
+                        widgets['text_fields']['answer'].background_color = (0, 0, 0, 1 / 255)
                         widgets['text_fields']['answer'].text = ''
                         widgets['buttons']['answer'].background_color = red
                         widgets['buttons']['answer'].text = ''
@@ -356,8 +377,8 @@ def client_read(player_name):
                     else:
                         flag_timer = True
                 if res[-1] == 'next':
-                        request = 'give me a pack'
-                        sock.send((request+'\n').encode())
+                    request = 'give me a pack'
+                    sock.send((request + '\n').encode())
             case "give":
                 max_score = 0
                 winner = 'master_oogway'
@@ -369,21 +390,21 @@ def client_read(player_name):
                 widgets['labels']['info'].text = f"{_('Игрок')} {winner} {_('победил в игре')}"
                 widgets['labels']['info'].text_size = widgets['labels']['info'].size
                 return True
-                
+
             case "finish":
                 flag_timer = False
                 flag_passive = True
                 widgets['labels']['info'].text = f"info: {_('Время вышло')}"
                 widgets['labels']['info'].text_size = widgets['labels']['info'].size
                 widgets['labels']['q_label'].text = ""
-                widgets['text_fields']['answer'].background_color = (0, 0, 0, 1/255)
+                widgets['text_fields']['answer'].background_color = (0, 0, 0, 1 / 255)
                 widgets['text_fields']['answer'].text = ''
                 widgets['buttons']['answer'].background_color = red
                 widgets['buttons']['answer'].text = ''
                 widgets['text_fields']['answer'].readonly = True
                 new_func = empty_func
                 widgets['buttons']['answer'].on_release = new_func
-                widgets['labels']['timer'].text = '00:00'    
+                widgets['labels']['timer'].text = '00:00'
             case "connect":
             # сообщение от сервера начинается с connect, если кто-то подключился
             # общий формат сообщения от сервера следующий:
@@ -400,6 +421,7 @@ def client_read(player_name):
 
 # ведущему приезжают такие же запросы от сервера, что и клиенту
 def master_read():
+    """Функция, которая читает из сокета для ведущего."""
     global sock, widgets, game_params, reject_counts, flag_timer
     time.sleep(0.1)
     while True:
@@ -444,9 +466,9 @@ def master_read():
                     widgets['labels']['info'].text = f"info: {_('Игрок')} {res[2]} {_('ответил неправильно')}"
                     widgets['labels']['info'].text_size = widgets['labels']['info'].size
                     if None in game_params['cur_players']:
-                        check_ind = game_params['cur_players'].index(None)-1
+                        check_ind = game_params['cur_players'].index(None) - 1
                     else:
-                        check_ind = game_params['players_count']-1
+                        check_ind = game_params['players_count'] - 1
                     if check_ind == int(res[3]):
                         widgets['labels']['q_label'].text = ""
                         widgets['labels']['right_ans'].text = ""
@@ -455,7 +477,7 @@ def master_read():
                         flag_timer = True
                 if res[-1] == 'next':
                     request = 'give me a pack'
-                    sock.send((request+'\n').encode())
+                    sock.send((request + '\n').encode())
             case "give":
                 max_score = 0
                 winner = 'master_oogway'
@@ -485,25 +507,26 @@ def master_read():
 
 
 def timer_func(master):
+    """Функция, реализующая таймер."""
     global widgets, flag_timer, sock, finish_flag
     while True:
         time.sleep(1)
         if finish_flag:
-           return 
+            return
         if flag_timer:
             cur = widgets['labels']['timer'].text.split(':')
             minutes = int(cur[0])
             seconds = int(cur[1])
             if seconds > 0:
-                cur[1] = str(seconds-1)
+                cur[1] = str(seconds - 1)
             else:
                 if minutes > 0:
-                    cur[0] = str(minutes-1)
+                    cur[0] = str(minutes - 1)
                     cur[1] = '59'
                 else:
                     if master:
                         request = "finish"
-                        sock.send((request+'\n').encode())
+                        sock.send((request + '\n').encode())
             if len(cur[0]) == 1:
                 cur[0] = '0' + cur[0]
             if len(cur[1]) == 1:
@@ -512,14 +535,17 @@ def timer_func(master):
             widgets['labels']['timer'].text = f"{cur[0]}:{cur[1]}"
 
 
-class Game(Screen): 
+class Game(Screen):
+    """Класс-экран с игрой."""
+
     def __init__(self, master, player_name, **kwargs):
+        """Отрисовка окна игры и запуск нужных потоков: reader и timer."""
         global widgets, game_params
         # Установка соединения с сервером
         super(Game, self).__init__(**kwargs)
-        self.on_pre_enter = App.get_running_app().update_text
+        self.on_pre_enter = partial(App.get_running_app().update_text, self)
         # присваиваме ГЛОБАЛЬНОЙ переменной widgets шаблонный вид.
-        # Далее, перед добавлением любого виджета на какой-либо layout 
+        # Далее, перед добавлением любого виджета на какой-либо layout
         # он будет добавляться в какую-то ячейку словаря widgets
         widgets = {'buttons': {}, 'labels': {}, 'text_fields': {}, 'layouts': {}}
         layout = BoxLayout(orientation='vertical')
@@ -529,7 +555,7 @@ class Game(Screen):
         cur_players = len(players)
         # максимально допустимое число игроков (указано при создании пати)
         players_count = game_params["players_count"]
-        players_layout = GridLayout(rows=2, cols=players_count+1, spacing=10)
+        players_layout = GridLayout(rows=2, cols=players_count + 1, spacing=10)
         for p in range(players_count):
             # если текущий индекс есть в фактическом массиве игроков,
             # то берем имя от туда, иначе шаблон: "player_i"
@@ -541,15 +567,14 @@ class Game(Screen):
             cur_label = Label(text=cur_text, font_size=20)
             widgets['labels'].setdefault('players', {})
             widgets['labels']['players'][cur_text] = cur_label
-            players_layout.add_widget(cur_label) #name
+            players_layout.add_widget(cur_label)
 
         button_exit = Button(
-                    text='Exit',
-                    background_color = 'red',
-                    on_release=self.switch_to_screen(master),
-                )
+            text='Exit',
+            background_color='red',
+            on_release=self.switch_to_screen(master),)
         players_layout.add_widget(button_exit)
-        
+
         for p in range(players_count):
             # То же самое, что и предыдущий виджет, но для лейблов с очками
             if p < cur_players:
@@ -561,10 +586,10 @@ class Game(Screen):
             cur_label = Label(text='0', font_size=20)
             widgets['labels'].setdefault('scores', {})
             widgets['labels']['scores'][cur_text] = cur_label
-            players_layout.add_widget(cur_label) #score
-            
+            players_layout.add_widget(cur_label)
+
         game_field = GridLayout(cols=2, padding=10, spacing=10)
-        q_table = GridLayout(cols=game_params['table_size'][1]+1, padding=10, spacing=10)
+        q_table = GridLayout(cols=game_params['table_size'][1] + 1, padding=10, spacing=10)
         # Локаль
         q_label = Label(text='Ищи вопрос тут', font_size=40)
         for th in game_params['table']:
@@ -591,12 +616,12 @@ class Game(Screen):
                 q_table.add_widget(button)
             tmp_cost = -1
             for _ in range(len(game_params['table'][th]), game_params['table_size'][1]):
-                button = Button(text = '', on_release = empty_func)
+                button = Button(text='', on_release=empty_func)
                 widgets['buttons']['questions'][th][str(tmp_cost)] = button
                 q_table.add_widget(button)
-                tmp_cost -=1
+                tmp_cost -= 1
         tmp_name = -1
-        for _ in range(len(game_params['table']),  game_params['table_size'][0]):
+        for _ in range(len(game_params['table']), game_params['table_size'][0]):
             cur_label = Label(text='', font_size=20)
             cur_label.text_size = cur_label.size
             widgets['buttons'].setdefault('questions', {})
@@ -616,21 +641,20 @@ class Game(Screen):
                 tmp_cost -= 1
             tmp_name -= 1
 
-
         widgets['labels']['q_label'] = q_label
         widgets['layouts']['table'] = q_table
         game_field.add_widget(q_table)
         game_field.add_widget(q_label)
-        
+
         gamer_tools = BoxLayout(orientation='horizontal')
         # Лейбл для вывода сообщений через "info:"
-        timer = Label(text='00:00', size=(10,10))
+        timer = Label(text='00:00', size=(10, 10))
         widgets['labels']['timer'] = timer
         gamer_tools.add_widget(timer)
-        info = Label(text='info:', size=(10,10))
+        info = Label(text='info:', size=(10, 10))
         widgets['labels']['info'] = info
         gamer_tools.add_widget(info)
-        
+
         if master:
             # Для окна ведущего
             answers = BoxLayout(orientation='vertical')
@@ -645,30 +669,30 @@ class Game(Screen):
             widgets['labels']['curr_ans'] = curr_ans
             answers.add_widget(curr_ans)
             gamer_tools.add_widget(answers)
-            
+
             buttons = BoxLayout(orientation='vertical')
             # Кнопка для принятия ответа
             # Локаль
-            button_accept = Button(text='Принять', background_color = red)
+            button_accept = Button(text='Принять', background_color=red)
             widgets['buttons']['accept'] = button_accept
             buttons.add_widget(button_accept)
             # Кнопка для отклонения ответа
             # Локаль
-            button_reject = Button(text='Отклонить', background_color = red)
+            button_reject = Button(text='Отклонить', background_color=red)
             widgets['buttons']['reject'] = button_reject
             buttons.add_widget(button_reject)
             gamer_tools.add_widget(buttons)
         else:
-            #Для окна игрока
+            # Для окна игрока
             # кнопка для отправки ответа
-            ans_button = Button(text='', background_color = red)
+            ans_button = Button(text='', background_color=red)
             widgets['buttons']['answer'] = ans_button
             gamer_tools.add_widget(ans_button)
             # Поле для ввода ответа
-            ans_field = TextInput(background_color=(0, 0, 0, 1/255), readonly=True)
+            ans_field = TextInput(background_color=(0, 0, 0, 1 / 255), readonly=True)
             widgets['text_fields']['answer'] = ans_field
             gamer_tools.add_widget(ans_field)
-        
+
         layout.add_widget(players_layout)
         layout.add_widget(game_field)
         layout.add_widget(gamer_tools)
@@ -679,15 +703,15 @@ class Game(Screen):
         self.add_widget(layout)
         # для ведущего своя функция-reader
         if master:
-            self.reader_thread = threading.Thread(target = master_read, daemon = True)
+            self.reader_thread = threading.Thread(target=master_read, daemon=True)
         else:
-            self.reader_thread = threading.Thread(target = client_read, args = (player_name,), daemon = True)
+            self.reader_thread = threading.Thread(target=client_read, args=(player_name,), daemon=True)
         self.reader_thread.start()
-        self.timer_thread = threading.Thread(target = timer_func, args = (master,), daemon = True)
+        self.timer_thread = threading.Thread(target=timer_func, args=(master,), daemon=True)
         self.timer_thread.start()
 
-    
     def switch_to_screen(self, master):
+        """Функция для кнопки выхода из игры."""
         def switch(*args):
             global sock, finish_flag, server_proc
             finish_flag = True
@@ -697,17 +721,17 @@ class Game(Screen):
             sock.close()
             if master:
                 server_proc.kill()
-
-            
             self.manager.current = 'main_menu'
             if self.manager.has_screen('game'):
-               self.manager.remove_widget(self.manager.get_screen('game'))
+                self.manager.remove_widget(self.manager.get_screen('game'))
         return switch
-    
 
 
 class Rules(Screen):
+    """Класс-экран с правилами игры."""
+
     def __init__(self, **kwargs):
+        """Создаёт виджеты для экрана с правилами игры."""
         super(Rules, self).__init__(**kwargs)
         self.on_pre_enter = App.get_running_app().update_text
         self.layout = BoxLayout(orientation="vertical", padding=10, spacing=10)
@@ -731,13 +755,16 @@ class Rules(Screen):
         self.add_widget(self.layout)
 
     def back_to_main_menu(self, *args):
+        """Функция для кнопки возвращения в главное меню."""
         self.manager.current = "main_menu"
 
 
 class MyApp(App):
-    def build(self):
-        self.current_lang = 'en'
+    """Класс-приложение со всеми экранами приложения."""
 
+    def build(self):
+        """Создаем все возможные экраны и ставим язык."""
+        self.current_lang = 'en'
         self.manager = ScreenManager()
         self.manager.add_widget(MainMenu(name="main_menu"))
         self.manager.add_widget(CreateGame(name="create_game"))
@@ -748,24 +775,27 @@ class MyApp(App):
         return self.manager
 
     def switch_lang(self, instance=None):
+        """Функция для смены языка."""
         if self.current_lang == 'ru':
             self.current_lang = 'en'
         else:
             self.current_lang = 'ru'
-        
+
         self.lang = gettext.translation('myapp', os.path.join(os.path.dirname(__file__), "locale"), languages=[self.current_lang])
         self.lang.install()
         self.update_text(self.manager)
 
     def update_text(self, widget=None):
+        """Функция для смены языка на виджетах."""
         if widget is None:
-            widget = self.root 
+            widget = self.root
         if hasattr(widget, 'text') and not isinstance(widget, TextInput):
             widget.text = _(widget.text)
-            print("WIDGET_TEXT: " + widget.text)
 
         for child in widget.children:
-            self.update_text(child) 
+            self.update_text(child)
+
 
 def main():
+    """Функция для запуска интерфейса приложения."""
     MyApp().run()

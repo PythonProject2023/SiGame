@@ -1,12 +1,8 @@
+"""Реализация сервера. Запускается при создании игры параллельно с окном ведущего."""
+
 import asyncio
 import shlex
-from io import StringIO
-import random
-import copy
-import locale
-import os
-import gettext
-from sigame.parser import parse_package
+from .parser import parse_package
 
 
 clients = {}
@@ -20,6 +16,7 @@ p_path = ''
 
 
 def get_round(package_path):
+    """Функция для работы с парсером: возвращает текстовое представление текущего раунда."""
     global target_questions, cur_round
     package = parse_package(package_path)
     max_len = 0
@@ -29,10 +26,10 @@ def get_round(package_path):
             max_len = len(package.rounds[round].themes)
     themes = package.rounds[cur_round].themes
     cur_table = {th: {str(q): (themes[th].get_question(q).get_text(),
-                      themes[th].get_question(q).get_answer().get_right()) 
+                      themes[th].get_question(q).get_answer().get_right())
                       for q in themes[th].questions} for th in themes}
     table_size = (max_len, max([len(themes[th].questions) for th in themes]))
-    #target_questions = table_size[0]*table_size[1]
+    # target_questions = table_size[0]*table_size[1]
     target_questions = 3
     cur_round += 1
     return (cur_table, table_size)
@@ -78,7 +75,7 @@ async def SIG(reader, writer):
     game_params['players'].append(name)
     await to_get
     writer.write(str(game_params).encode())
-    await writer.drain()   
+    await writer.drain()
     clients[name] = asyncio.Queue()
 
     # создаем два задания: на чтение и на запись
@@ -137,7 +134,7 @@ async def main(game_name, real_password, package_path, players_count):
                    "table_size": table_size,
                    "game_name": game_name,
                    "players_count": players_count,
-                   "players": []}   
+                   "players": []}
     password = real_password
     server = await asyncio.start_server(SIG, '0.0.0.0', 1321)
     async with server:
@@ -145,4 +142,5 @@ async def main(game_name, real_password, package_path, players_count):
 
 
 def server_starter(game_name, real_password, package_path, players_count):
+    """Функция запускающая щапуск сервера."""
     asyncio.run(main(game_name, real_password, package_path, players_count))
