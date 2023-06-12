@@ -10,12 +10,14 @@ from kivy.uix.label import Label
 from kivy.uix.screenmanager import Screen, ScreenManager
 from kivy.uix.slider import Slider
 from kivy.uix.textinput import TextInput
+from functools import partial
 from .server import server_starter
 import multiprocessing
 import threading
 import time
 import socket
 import shlex
+import gettext
 
 
 # сокет
@@ -49,17 +51,18 @@ class MainMenu(Screen):
         self.layout.add_widget(Label(text="Своя игра", font_size=40))
 
         self.buttons = [
-            ("Создать игру", "create_game"),
-            ("Присоединиться к игре", "join_game"),
-            ("Правила", "rules"),
-            ("Выход", "exit"),
+            ("Создать игру", self.switch_to_screen, ["create_game"]),
+            ("Присоединиться к игре", self.switch_to_screen, ["join_game"]),
+            ("Правила", self.switch_to_screen, ["rules"]),
+            ("Сменить язык", lambda: App.get_running_app().switch_lang, []),
+            ("Выход",  self.switch_to_screen, ["exit"]),
         ]
 
-        for text, screen_name in self.buttons:
+        for text, func, args in self.buttons:
             button = Button(
                 text=text,
                 size_hint=(1, 0.2),
-                on_release=self.switch_to_screen(screen_name),
+                on_release=func(*args)
             )
             self.layout.add_widget(button)
 
@@ -71,13 +74,13 @@ class MainMenu(Screen):
                 App.get_running_app().stop()
             else:
                 self.manager.current = screen_name
-
         return switch
 
 
 class CreateGame(Screen):
     def __init__(self, **kwargs):
         super(CreateGame, self).__init__(**kwargs)
+        self.on_pre_enter = App.get_running_app().update_text
         self.layout = GridLayout(cols=2, padding=10, spacing=10)
 
         self.layout.add_widget(Label(text="Название игры:", font_size=20))
@@ -115,7 +118,7 @@ class CreateGame(Screen):
         server_proc.start()
         time.sleep(0.3)
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.connect(('localhost', 1350))
+        sock.connect(('localhost', 2000))
         sock.send(("master__oogway\n").encode())
         res = sock.recv(4096)
         sock.send((password + '\n').encode())
@@ -132,6 +135,7 @@ class CreateGame(Screen):
 class JoinGame(Screen):
     def __init__(self, **kwargs):
         super(JoinGame, self).__init__(**kwargs)
+        self.on_pre_enter = App.get_running_app().update_text
         self.layout = GridLayout(cols=2, padding=10, spacing=10)
 
         self.layout.add_widget(Label(text="Название игры:", font_size=20))
@@ -159,7 +163,7 @@ class JoinGame(Screen):
         password = self.password.text
         player_name = self.player_name.text
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.connect(('localhost', 1350))
+        sock.connect(('localhost', 2000))
         sock.send((f"{player_name}\n").encode())
         res = sock.recv(4096).decode()
         if res == 'sorry':
@@ -172,7 +176,7 @@ class JoinGame(Screen):
             if res == 'sorry':
                 sock.shutdown(socket.SHUT_RDWR)
                 sock.close()
-                self.password_label.text = "Пароль: (Был введен неверный)"
+                self.password_label.text = f"{_('Пароль')}: {_('Был введен неверный')}"
                 self.password_label.color = 'red'
             else:
                 sock.send(('give me a pack' + '\n').encode())
@@ -280,12 +284,10 @@ def client_read(player_name):
                 widgets['buttons']['answer'].font_size = 40
                 new_func = answer_button(player_name)
                 widgets['buttons']['answer'].on_release = new_func
-                # Локаль
-                widgets['labels']['q_label'].text = f"ТЕКСТ ВОПРОСА: {game_params['table'][res[1]][res[2]][0]}"
+                widgets['labels']['q_label'].text = f"{_('ТЕКСТ ВОПРОСА')}: {game_params['table'][res[1]][res[2]][0]}"
                 widgets['labels']['q_label'].text_size = widgets['labels']['q_label'].size
                 widgets['labels']['q_label'].font_size = 20
-                # Локаль
-                widgets['labels']['info'].text = f"info: ТЕКУЩИЙ ВОПРОС: {[res[1]]}, {[res[2]]}"
+                widgets['labels']['info'].text = f"info: {_('ТЕКУЩИЙ ВОПРОС')}: {[res[1]]}, {[res[2]]}"
                 widgets['labels']['info'].text_size = widgets['labels']['info'].size
                 widgets['labels']['timer'].text = '00:30'
                 flag_timer = True
@@ -297,8 +299,7 @@ def client_read(player_name):
                 if res[1] != player_name:
                     widgets['buttons']['answer'].background_color = red
                     widgets['buttons']['answer'].on_release = empty_func
-                    # Локаль
-                    widgets['labels']['info'].text = f"Игрок {res[1]} ответил: {res[2]}"
+                    widgets['labels']['info'].text = f"{_('Игрок')} {res[1]} {_('ответил')}: {res[2]}"
                     widgets['labels']['info'].text_size = widgets['labels']['info'].size
             case "verdict":
             # сообщение от сервера начинается с verdict, если ведущий нажал на кнопку принять или отклонить
@@ -308,11 +309,9 @@ def client_read(player_name):
                     flag_passive = True
                     widgets['labels']['q_label'].text = ""
                     if res[2] == player_name:
-                        # Локаль
-                        widgets['labels']['info'].text = "info: Ваш ответ правильный"
+                        widgets['labels']['info'].text = f"info: {_('Ваш ответ правильный')}"
                     else:
-                        # Локаль
-                        widgets['labels']['info'].text = f"info: Игрок {res[2]} ответил правильно"
+                        widgets['labels']['info'].text = f"info: {_('Игрок')} {res[2]} {_('ответил правильно')}"
                     widgets['labels']['info'].text_size = widgets['labels']['info'].size
                     new_score = int(widgets['labels']['scores'][res[2]].text) + int(active_score)
                     widgets['labels']['scores'][res[2]].text = str(new_score)
@@ -328,11 +327,9 @@ def client_read(player_name):
                     # если пришло сообщение о конце раунда
                 else:
                     if res[2] == player_name:
-                        # Локаль
-                        widgets['labels']['info'].text = "info: Ваш ответ неправтльный"
+                        widgets['labels']['info'].text = f"info: {_('Ваш ответ неправильный')}"
                     else:
-                        # Локаль
-                        widgets['labels']['info'].text = f"info: Игрок {res[2]} ответил неправильно"
+                        widgets['labels']['info'].text = f"info: {_('Игрок')} {res[2]} {_('ответил неправильно')}"
                         if widgets['buttons']['answer'] != '':
                             widgets['buttons']['answer'].background_color = green
                             new_func = answer_button(player_name)
@@ -368,14 +365,14 @@ def client_read(player_name):
                     if cur_score > max_score:
                         max_score = cur_score
                         winner = pl
-                widgets['labels']['info'].text = f"Игрок {winner} победил в игре"
+                widgets['labels']['info'].text = f"{_('Игрок')} {winner} {_('победил в игре')}"
                 widgets['labels']['info'].text_size = widgets['labels']['info'].size
                 return True
                 
             case "finish":
                 flag_timer = False
                 flag_passive = True
-                widgets['labels']['info'].text = f"info: time has gone"
+                widgets['labels']['info'].text = f"info: {_('Время вышло')}"
                 widgets['labels']['info'].text_size = widgets['labels']['info'].size
                 widgets['labels']['q_label'].text = ""
                 widgets['text_fields']['answer'].background_color = (0, 0, 0, 1/255)
@@ -389,9 +386,8 @@ def client_read(player_name):
             case "connect":
             # сообщение от сервера начинается с connect, если кто-то подключился
             # общий формат сообщения от сервера следующий:
-            # connect- res[0] <Имя игрока> - res[1] 
-                # Локаль
-                widgets['labels']['info'].text = f"info: Игрок {res[1]} подключился"
+            # connect- res[0] <Имя игрока> - res[1]
+                widgets['labels']['info'].text = f"info: {_('Игрок')} {res[1]} {_('подключился')}"
                 widgets['labels']['info'].text_size = widgets['labels']['info'].size
                 free_place = game_params['cur_players'].index(None)
                 game_params['cur_players'][free_place] = res[1]
@@ -415,22 +411,18 @@ def master_read():
                 reject_counts = 0
                 active_score = res[2]
                 widgets['buttons']['questions'][res[1]][res[2]].text = ''
-                # Локаль
-                widgets['labels']['q_label'].text = f"ТЕКСТ ВОПРОСА: {game_params['table'][res[1]][res[2]][0]}"
+                widgets['labels']['q_label'].text = f"{_('ТЕКСТ ВОПРОСА')}: {game_params['table'][res[1]][res[2]][0]}"
                 widgets['labels']['q_label'].text_size = widgets['labels']['q_label'].size
                 widgets['labels']['q_label'].font_size = 20
-                # Локаль
-                widgets['labels']['right_ans'].text = f"Правильный ответ: {game_params['table'][res[1]][res[2]][1]}"
+                widgets['labels']['right_ans'].text = f"{_('Правильный ответ')}: {game_params['table'][res[1]][res[2]][1]}"
                 widgets['labels']['right_ans'].text_size = widgets['labels']['right_ans'].size
-                # Локаль
-                widgets['labels']['info'].text = f"info: ТЕКУЩИЙ ВОПРОС: {[res[1]]}, {[res[2]]}"
+                widgets['labels']['info'].text = f"info: {_('ТЕКУЩИЙ ВОПРОС')}: {[res[1]]}, {[res[2]]}"
                 widgets['labels']['info'].text_size = widgets['labels']['info'].size
                 widgets['labels']['timer'].text = '00:30'
                 flag_timer = True
             case "answer":
-                # Локаль
                 flag_timer = False
-                widgets['labels']['curr_ans'].text = f"Ответ игрока {res[1]}: {res[2]}"
+                widgets['labels']['curr_ans'].text = f"{_('Ответ игрока')} {res[1]}: {res[2]}"
                 widgets['labels']['curr_ans'].text_size = widgets['labels']['curr_ans'].size
                 new_func = accept_button(res[1])
                 widgets['buttons']['accept'].on_release = new_func
@@ -443,14 +435,12 @@ def master_read():
                     widgets['labels']['q_label'].text = ""
                     widgets['labels']['right_ans'].text = ""
                     widgets['labels']['timer'].text = '00:00'
-                    # Локаль
-                    widgets['labels']['info'].text = f"info: Игрок {res[2]} ответил правильно"
+                    widgets['labels']['info'].text = f"info: {_('Игрок')} {res[2]} {_('ответил правильно')}"
                     widgets['labels']['info'].text_size = widgets['labels']['info'].size
                     new_score = int(widgets['labels']['scores'][res[2]].text) + int(active_score)
                     widgets['labels']['scores'][res[2]].text = str(new_score)
                 else:
-                    # Локаль
-                    widgets['labels']['info'].text = f"info: Игрок {res[2]} ответил неправильно"
+                    widgets['labels']['info'].text = f"info: {_('Игрок')} {res[2]} {_('ответил неправильно')}"
                     widgets['labels']['info'].text_size = widgets['labels']['info'].size
                     if None in game_params['cur_players']:
                         check_ind = game_params['cur_players'].index(None)-1
@@ -473,7 +463,7 @@ def master_read():
                     if cur_score > max_score:
                         max_score = cur_score
                         winner = widgets['labels']['players'][pl].text
-                widgets['labels']['info'].text = f"Игрок {winner} победил в игре"
+                widgets['labels']['info'].text = f"{_('Игрок')} {winner} {_('победил в игре')}"
                 widgets['labels']['info'].text_size = widgets['labels']['info'].size
                 return True
             case "finish":
@@ -481,12 +471,10 @@ def master_read():
                 widgets['labels']['q_label'].text = ""
                 widgets['labels']['right_ans'].text = ""
                 widgets['labels']['timer'].text = '00:00'
-                # Локаль
-                widgets['labels']['info'].text = f"info: time has gone"
+                widgets['labels']['info'].text = f"info: {_('Время вышло')}"
                 widgets['labels']['info'].text_size = widgets['labels']['info'].size
             case "connect":
-                # Локаль
-                widgets['labels']['info'].text = f"info: Игрок {res[1]} подключился"
+                widgets['labels']['info'].text = f"info: {_('Игрок')} {res[1]} {_('подключился')}"
                 widgets['labels']['info'].text_size = widgets['labels']['info'].size
                 free_place = game_params['cur_players'].index(None)
                 game_params['cur_players'][free_place] = res[1]
@@ -528,6 +516,7 @@ class Game(Screen):
         global widgets, game_params
         # Установка соединения с сервером
         super(Game, self).__init__(**kwargs)
+        self.on_pre_enter = App.get_running_app().update_text
         # присваиваме ГЛОБАЛЬНОЙ переменной widgets шаблонный вид.
         # Далее, перед добавлением любого виджета на какой-либо layout 
         # он будет добавляться в какую-то ячейку словаря widgets
@@ -719,6 +708,7 @@ class Game(Screen):
 class Rules(Screen):
     def __init__(self, **kwargs):
         super(Rules, self).__init__(**kwargs)
+        self.on_pre_enter = App.get_running_app().update_text
         self.layout = BoxLayout(orientation="vertical", padding=10, spacing=10)
 
         self.rules_label = Label(text="Правила и инструкции", font_size=30)
@@ -745,11 +735,32 @@ class Rules(Screen):
 
 class MyApp(App):
     def build(self):
-        screen_manager = ScreenManager()
-        screen_manager.add_widget(MainMenu(name="main_menu"))
-        screen_manager.add_widget(CreateGame(name="create_game"))
-        screen_manager.add_widget(JoinGame(name="join_game"))
-        screen_manager.add_widget(Rules(name="rules"))
-        ## screen_manager.add_widget(Game(name="game"))
+        self.current_lang = 'en'
 
-        return screen_manager
+        self.manager = ScreenManager()
+        self.manager.add_widget(MainMenu(name="main_menu"))
+        self.manager.add_widget(CreateGame(name="create_game"))
+        self.manager.add_widget(JoinGame(name="join_game"))
+        self.manager.add_widget(Rules(name="rules"))
+
+        self.switch_lang()
+        return self.manager
+
+    def switch_lang(self, instance=None):
+        if self.current_lang == 'ru':
+            self.current_lang = 'en'
+        else:
+            self.current_lang = 'ru'
+        
+        self.lang = gettext.translation('myapp', localedir='locale', languages=[self.current_lang])
+        self.lang.install()
+        self.update_text(self.manager)
+
+    def update_text(self, widget=None):
+        if widget is None:
+            widget = self.root 
+        if hasattr(widget, 'text') and not isinstance(widget, TextInput):
+            widget.text = _(widget.text)
+
+        for child in widget.children:
+            self.update_text(child) 

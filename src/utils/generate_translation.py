@@ -30,7 +30,12 @@ translations = {
     "Ответ игрока": "Player's answer",
     "Верный ответ:": "Correct answer:",
     "Принять": "Accept",
-    "Отклонить": "Reject"
+    "Отклонить": "Reject",
+    "Пароль": "Password",
+    "Был введен неверный": "incorrect password was entered",
+    "победил в игре": "won the game",
+    "Время вышло": "Time has gone",
+    "Выход": "Exit"
 }
 
 
