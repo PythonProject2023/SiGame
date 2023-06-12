@@ -115,7 +115,7 @@ class CreateGame(Screen):
         server_proc.start()
         time.sleep(0.3)
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.connect(('localhost', 1350))
+        sock.connect(('localhost', 1321))
         sock.send(("master__oogway\n").encode())
         res = sock.recv(4096)
         sock.send((password + '\n').encode())
@@ -159,7 +159,7 @@ class JoinGame(Screen):
         password = self.password.text
         player_name = self.player_name.text
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.connect(('localhost', 1350))
+        sock.connect(('localhost', 1321))
         sock.send((f"{player_name}\n").encode())
         res = sock.recv(4096).decode()
         if res == 'sorry':
@@ -753,3 +753,6 @@ class MyApp(App):
         ## screen_manager.add_widget(Game(name="game"))
 
         return screen_manager
+
+def main():
+    MyApp().run()
