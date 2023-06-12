@@ -393,6 +393,100 @@ def client_read(player_name):
     return True
 
 
+# ведущему приезжают такие же запросы от сервера, что и клиенту
+def master_read():
+    global sock, widgets, game_params, reject_counts, flag_timer
+    time.sleep(0.1)
+    while True:
+        res = sock.recv(8192)
+        res_str = res.decode()
+        res = shlex.split(res_str)
+        print("MASTER GOT:")
+        match res[0]:
+            case "choose":
+                reject_counts = 0
+                active_score = res[2]
+                widgets['buttons']['questions'][res[1]][res[2]].text = ''
+                # Локаль
+                widgets['labels']['q_label'].text = f"ТЕКСТ ВОПРОСА: {game_params['table'][res[1]][res[2]][0]}"
+                widgets['labels']['q_label'].text_size = widgets['labels']['q_label'].size
+                widgets['labels']['q_label'].font_size = 20
+                # Локаль
+                widgets['labels']['right_ans'].text = f"Правильный ответ: {game_params['table'][res[1]][res[2]][1]}"
+                widgets['labels']['right_ans'].text_size = widgets['labels']['right_ans'].size
+                # Локаль
+                widgets['labels']['info'].text = f"info: ТЕКУЩИЙ ВОПРОС: {[res[1]]}, {[res[2]]}"
+                widgets['labels']['info'].text_size = widgets['labels']['info'].size
+                widgets['labels']['timer'].text = '00:30'
+                flag_timer = True
+            case "answer":
+                # Локаль
+                flag_timer = False
+                widgets['labels']['curr_ans'].text = f"Ответ игрока {res[1]}: {res[2]}"
+                widgets['labels']['curr_ans'].text_size = widgets['labels']['curr_ans'].size
+                new_func = accept_button(res[1])
+                widgets['buttons']['accept'].on_release = new_func
+                widgets['buttons']['accept'].background_color = green
+                new_func = reject_button(res[1])
+                widgets['buttons']['reject'].on_release = new_func
+                widgets['buttons']['reject'].background_color = green
+            case "verdict":
+                if res[1] == 'accept':
+                    widgets['labels']['q_label'].text = ""
+                    widgets['labels']['right_ans'].text = ""
+                    widgets['labels']['timer'].text = '00:00'
+                    # Локаль
+                    widgets['labels']['info'].text = f"info: Игрок {res[2]} ответил правильно"
+                    widgets['labels']['info'].text_size = widgets['labels']['info'].size
+                    new_score = int(widgets['labels']['scores'][res[2]].text) + int(active_score)
+                    widgets['labels']['scores'][res[2]].text = str(new_score)
+                else:
+                    # Локаль
+                    widgets['labels']['info'].text = f"info: Игрок {res[2]} ответил неправильно"
+                    widgets['labels']['info'].text_size = widgets['labels']['info'].size
+                    if None in game_params['cur_players']:
+                        check_ind = game_params['cur_players'].index(None)-1
+                    else:
+                        check_ind = game_params['players_count']-1
+                    if check_ind == int(res[3]):
+                        widgets['labels']['q_label'].text = ""
+                        widgets['labels']['right_ans'].text = ""
+                        widgets['labels']['timer'].text = '00:00'
+                    else:
+                        flag_timer = True
+                if res[-1] == 'next':
+                    request = 'give me a pack'
+                    sock.send((request+'\n').encode())
+            case "give":
+                max_score = 0
+                winner = 'master_oogway'
+                for pl in widgets['labels']['scores']:
+                    cur_score = int(widgets['labels']['scores'][pl].text)
+                    if cur_score > max_score:
+                        max_score = cur_score
+                        winner = widgets['labels']['players'][pl].text
+                widgets['labels']['info'].text = f"Игрок {winner} победил в игре"
+                widgets['labels']['info'].text_size = widgets['labels']['info'].size
+                return True
+            case "finish":
+                flag_timer = False
+                widgets['labels']['q_label'].text = ""
+                widgets['labels']['right_ans'].text = ""
+                widgets['labels']['timer'].text = '00:00'
+                # Локаль
+                widgets['labels']['info'].text = f"info: time has gone"
+                widgets['labels']['info'].text_size = widgets['labels']['info'].size
+            case "connect":
+                # Локаль
+                widgets['labels']['info'].text = f"info: Игрок {res[1]} подключился"
+                widgets['labels']['info'].text_size = widgets['labels']['info'].size
+                free_place = game_params['cur_players'].index(None)
+                game_params['cur_players'][free_place] = res[1]
+                widgets['labels']['players'][f"player_{free_place}"].text = res[1]
+                widgets['labels']['players'][res[1]] = widgets['labels']['players'][f"player_{free_place}"]
+                widgets['labels']['scores'][res[1]] = widgets['labels']['scores'][f"player_{free_place}"]
+
+
 class Game(Screen): 
     def __init__(self, master, player_name, **kwargs):
         global widgets, game_params
