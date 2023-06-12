@@ -31,6 +31,12 @@ class TestApp(unittest.TestCase):
         exp_call = [unittest.mock.call(("choose 'прекрасный дагестан' 300\n").encode())]
         print(self.sock.call_count)
         self.sock.send.assert_has_calls(exp_call)
+        
+    def test_2_answer_button(self):
+        f = app.answer_button('test')
+        f()
+        exp_call = [unittest.mock.call(("answer test text\n").encode())]
+        self.sock.send.assert_has_calls(exp_call)
 
 
 class TestParser(unittest.TestCase):
