@@ -44,8 +44,7 @@ flag_timer = False
 finish_flag = False
 server_proc = None
 RED = (237/255, 23/255, 23/255, 1)
-green = [0, 1, 0, 1] 
-blue = [0, 0, 1, 1] 
+green = [0, 1, 0, 1]
 purple = [1, 0, 1, 1]
 white = [1, 1, 1, 1]
 ORANGE=(250/255, 153/255, 57/255, 1)
@@ -276,9 +275,9 @@ def answer_button(player_name):
         global sock
         request = f"answer {player_name} {widgets['text_fields']['answer'].text}"
         widgets['text_fields']['answer'].background_color = (0, 0, 0, 1 / 255)
-        widgets['text_fields']['answer'].text = ''
-        widgets['buttons']['answer'].background_color = RED
-        widgets['buttons']['answer'].text = ''
+        widgets['text_fields']['answer'].text = ' '
+        widgets['buttons']['answer'].background_color = GREY
+        widgets['buttons']['answer'].text = ' '
         widgets['text_fields']['answer'].readonly = True
         new_func = empty_func
         widgets['buttons']['answer'].on_release = new_func
@@ -294,11 +293,11 @@ def reject_button(player_name):
         # это будет происходить, если нажать на кнопку
         global sock, reject_counts
         reject_counts += 1
-        widgets['labels']['curr_ans'].text = ""
+        widgets['labels']['curr_ans'].text = " "
         widgets['buttons']['accept'].on_release = empty_func
-        widgets['buttons']['accept'].background_color = RED
+        widgets['buttons']['accept'].background_color = GREY
         widgets['buttons']['reject'].on_release = empty_func
-        widgets['buttons']['reject'].background_color = RED
+        widgets['buttons']['reject'].background_color = GREY
         request = f"verdict reject {player_name} {reject_counts}"
         sock.send((request + '\n').encode())
     return func
@@ -311,11 +310,11 @@ def accept_button(player_name):
     def func():
         # это будет происходить, если нажать на кнопку
         global sock
-        widgets['labels']['curr_ans'].text = ""
+        widgets['labels']['curr_ans'].text = " "
         widgets['buttons']['accept'].on_release = empty_func
-        widgets['buttons']['accept'].background_color = RED
+        widgets['buttons']['accept'].background_color = GREY
         widgets['buttons']['reject'].on_release = empty_func
-        widgets['buttons']['reject'].background_color = RED
+        widgets['buttons']['reject'].background_color = GREY
         request = f"verdict accept {player_name}"
         sock.send((request + '\n').encode())
     return func
@@ -338,12 +337,12 @@ def client_read(player_name):
             # choose - res[0] <theme> - res[1] <question_cost> - res[2]
                 flag_passive = False
                 active_score = res[2]
-                widgets['buttons']['questions'][res[1]][res[2]].text = ''
+                widgets['buttons']['questions'][res[1]][res[2]].text = ' '
                 widgets['buttons']['questions'][res[1]][res[2]].on_release = empty_func
                 widgets['text_fields']['answer'].background_color = white
                 widgets['text_fields']['answer'].readonly = False
-                widgets['buttons']['answer'].background_color = green
-                widgets['buttons']['answer'].color = 'black'
+                widgets['buttons']['answer'].background_color = ORANGE
+                widgets['buttons']['answer'].color = BLUE
                 widgets['buttons']['answer'].text = 'Ответить'
                 widgets['buttons']['answer'].font_size = 40
                 new_func = answer_button(player_name)
@@ -361,7 +360,7 @@ def client_read(player_name):
             # answer - res[0] <имя ответчика> - res[1] <сам по себе ответ> - res[2]
                 flag_timer = False
                 if res[1] != player_name:
-                    widgets['buttons']['answer'].background_color = RED
+                    widgets['buttons']['answer'].background_color = GREY
                     widgets['buttons']['answer'].on_release = empty_func
                     widgets['labels']['info'].text = f"{_('Игрок')} {res[1]} {_('ответил')}: {res[2]}"
                     widgets['labels']['info'].text_size = widgets['labels']['info'].size
@@ -371,7 +370,7 @@ def client_read(player_name):
             # verdict - res[0] <accept/reject> - res[1] <имя игрока> - res[2]
                 if res[1] == 'accept':
                     flag_passive = True
-                    widgets['labels']['q_label'].text = ""
+                    widgets['labels']['q_label'].text = " "
                     if res[2] == player_name:
                         widgets['labels']['info'].text = f"info: {_('Ваш ответ правильный')}"
                     else:
@@ -380,13 +379,13 @@ def client_read(player_name):
                     new_score = int(widgets['labels']['scores'][res[2]].text) + int(active_score)
                     widgets['labels']['scores'][res[2]].text = str(new_score)
                     widgets['text_fields']['answer'].background_color = (0, 0, 0, 1 / 255)
-                    widgets['text_fields']['answer'].text = ''
-                    widgets['buttons']['answer'].background_color = RED
-                    widgets['buttons']['answer'].text = ''
+                    widgets['text_fields']['answer'].text = ' '
+                    widgets['buttons']['answer'].background_color = GREY
+                    widgets['buttons']['answer'].text = ' '
                     widgets['text_fields']['answer'].readonly = True
                     new_func = empty_func
                     widgets['buttons']['answer'].on_release = new_func
-                    widgets['labels']['q_label'].text = ""
+                    widgets['labels']['q_label'].text = " "
                     widgets['labels']['timer'].text = '00:00'
                     # если пришло сообщение о конце раунда
                 else:
@@ -394,8 +393,8 @@ def client_read(player_name):
                         widgets['labels']['info'].text = f"info: {_('Ваш ответ неправильный')}"
                     else:
                         widgets['labels']['info'].text = f"info: {_('Игрок')} {res[2]} {_('ответил неправильно')}"
-                        if widgets['buttons']['answer'] != '':
-                            widgets['buttons']['answer'].background_color = green
+                        if widgets['buttons']['answer'] != ' ':
+                            widgets['buttons']['answer'].background_color = ORANGE
                             new_func = answer_button(player_name)
                             widgets['buttons']['answer'].on_release = new_func
                     widgets['labels']['info'].text_size = widgets['labels']['info'].size
@@ -407,11 +406,11 @@ def client_read(player_name):
                     # содержится счетчик reject_counts от сервера
                     if check_ind == int(res[3]):
                         flag_passive = True
-                        widgets['labels']['q_label'].text = ""
+                        widgets['labels']['q_label'].text = " "
                         widgets['text_fields']['answer'].background_color = (0, 0, 0, 1 / 255)
-                        widgets['text_fields']['answer'].text = ''
-                        widgets['buttons']['answer'].background_color = RED
-                        widgets['buttons']['answer'].text = ''
+                        widgets['text_fields']['answer'].text = ' '
+                        widgets['buttons']['answer'].background_color = GREY
+                        widgets['buttons']['answer'].text = ' '
                         widgets['text_fields']['answer'].readonly = True
                         new_func = empty_func
                         widgets['buttons']['answer'].on_release = new_func
@@ -438,11 +437,11 @@ def client_read(player_name):
                 flag_passive = True
                 widgets['labels']['info'].text = f"info: {_('Время вышло')}"
                 widgets['labels']['info'].text_size = widgets['labels']['info'].size
-                widgets['labels']['q_label'].text = ""
+                widgets['labels']['q_label'].text = " "
                 widgets['text_fields']['answer'].background_color = (0, 0, 0, 1 / 255)
-                widgets['text_fields']['answer'].text = ''
-                widgets['buttons']['answer'].background_color = RED
-                widgets['buttons']['answer'].text = ''
+                widgets['text_fields']['answer'].text = ' '
+                widgets['buttons']['answer'].background_color = GREY
+                widgets['buttons']['answer'].text = ' '
                 widgets['text_fields']['answer'].readonly = True
                 new_func = empty_func
                 widgets['buttons']['answer'].on_release = new_func
@@ -491,14 +490,14 @@ def master_read():
                 widgets['labels']['curr_ans'].text_size = widgets['labels']['curr_ans'].size
                 new_func = accept_button(res[1])
                 widgets['buttons']['accept'].on_release = new_func
-                widgets['buttons']['accept'].background_color = green
+                widgets['buttons']['accept'].background_color = ORANGE
                 new_func = reject_button(res[1])
                 widgets['buttons']['reject'].on_release = new_func
-                widgets['buttons']['reject'].background_color = green
+                widgets['buttons']['reject'].background_color = ORANGE
             case "verdict":
                 if res[1] == 'accept':
-                    widgets['labels']['q_label'].text = ""
-                    widgets['labels']['right_ans'].text = ""
+                    widgets['labels']['q_label'].text = " "
+                    widgets['labels']['right_ans'].text = " "
                     widgets['labels']['timer'].text = '00:00'
                     widgets['labels']['info'].text = f"info: {_('Игрок')} {res[2]} {_('ответил правильно')}"
                     widgets['labels']['info'].text_size = widgets['labels']['info'].size
@@ -512,8 +511,8 @@ def master_read():
                     else:
                         check_ind = game_params['players_count'] - 1
                     if check_ind == int(res[3]):
-                        widgets['labels']['q_label'].text = ""
-                        widgets['labels']['right_ans'].text = ""
+                        widgets['labels']['q_label'].text = " "
+                        widgets['labels']['right_ans'].text = " "
                         widgets['labels']['timer'].text = '00:00'
                     else:
                         flag_timer = True
@@ -533,8 +532,8 @@ def master_read():
                 return True
             case "finish":
                 flag_timer = False
-                widgets['labels']['q_label'].text = ""
-                widgets['labels']['right_ans'].text = ""
+                widgets['labels']['q_label'].text = " "
+                widgets['labels']['right_ans'].text = " "
                 widgets['labels']['timer'].text = '00:00'
                 widgets['labels']['info'].text = f"info: {_('Время вышло')}"
                 widgets['labels']['info'].text_size = widgets['labels']['info'].size
