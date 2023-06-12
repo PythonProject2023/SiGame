@@ -37,8 +37,9 @@ def get_round(package_path):
     cur_round += 1
     return (cur_table, table_size)
 
+
 async def SIG(reader, writer):
-	"""Функция, реализуящая функциональности сервера.
+    """Функция, реализуящая функциональности сервера.
 
     Организует запуск на выполнение принимаемых от пользователя команд,
     а также посылает ответы пользователю или широковещательные сообщения.
@@ -83,7 +84,7 @@ async def SIG(reader, writer):
     # создаем два задания: на чтение и на запись
     send = asyncio.create_task(reader.readline())
     receive = asyncio.create_task(clients[name].get())
-    
+
     while not reader.at_eof():
         # обрабатываем выполненные задания с учетом того, что они могут закончиться одновременно
         done, pending = await asyncio.wait([send, receive], return_when=asyncio.FIRST_COMPLETED)
@@ -106,7 +107,6 @@ async def SIG(reader, writer):
                 # достаем результат из очереди и посылаем его клиенту
                 receive = asyncio.create_task(clients[name].get())
                 cur_rcv = q.result()
-                print(f"SERVER GOT {cur_rcv}")
                 writer.write(cur_rcv.encode())
                 await writer.drain()
         else:

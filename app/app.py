@@ -1,4 +1,7 @@
 import kivy
+
+kivy.require('2.1.0')
+
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
@@ -7,6 +10,12 @@ from kivy.uix.label import Label
 from kivy.uix.screenmanager import Screen, ScreenManager
 from kivy.uix.slider import Slider
 from kivy.uix.textinput import TextInput
+from .server import server_starter
+import multiprocessing
+import threading
+import time
+import socket
+import shlex
 
 
 # сокет
@@ -178,7 +187,6 @@ class JoinGame(Screen):
 def empty_func(*args):
     """пустышка: ставится в обработчик кнопки, если ее надо "деактивировать"""
     pass
-
 
 def choose_button(th, q):
     """генератор функций для кнопок с ценами вопросов"""
@@ -487,6 +495,34 @@ def master_read():
                 widgets['labels']['scores'][res[1]] = widgets['labels']['scores'][f"player_{free_place}"]
 
 
+def timer_func(master):
+    global widgets, flag_timer, sock, finish_flag
+    while True:
+        time.sleep(1)
+        if finish_flag:
+           return 
+        if flag_timer:
+            cur = widgets['labels']['timer'].text.split(':')
+            minutes = int(cur[0])
+            seconds = int(cur[1])
+            if seconds > 0:
+                cur[1] = str(seconds-1)
+            else:
+                if minutes > 0:
+                    cur[0] = str(minutes-1)
+                    cur[1] = '59'
+                else:
+                    if master:
+                        request = "finish"
+                        sock.send((request+'\n').encode())
+            if len(cur[0]) == 1:
+                cur[0] = '0' + cur[0]
+            if len(cur[1]) == 1:
+                cur[1] = '0' + cur[1]
+
+            widgets['labels']['timer'].text = f"{cur[0]}:{cur[1]}"
+
+
 class Game(Screen): 
     def __init__(self, master, player_name, **kwargs):
         global widgets, game_params
@@ -570,7 +606,6 @@ class Game(Screen):
                 q_table.add_widget(button)
                 tmp_cost -=1
         tmp_name = -1
-        print("COMPARE:", len(game_params['table']),  game_params['table_size'][0])
         for _ in range(len(game_params['table']),  game_params['table_size'][0]):
             cur_label = Label(text='', font_size=20)
             cur_label.text_size = cur_label.size
@@ -678,6 +713,7 @@ class Game(Screen):
             if self.manager.has_screen('game'):
                self.manager.remove_widget(self.manager.get_screen('game'))
         return switch
+    
 
 
 class Rules(Screen):
@@ -714,6 +750,6 @@ class MyApp(App):
         screen_manager.add_widget(CreateGame(name="create_game"))
         screen_manager.add_widget(JoinGame(name="join_game"))
         screen_manager.add_widget(Rules(name="rules"))
-        screen_manager.add_widget(Game(name="game"))
+        ## screen_manager.add_widget(Game(name="game"))
 
         return screen_manager
