@@ -129,7 +129,26 @@ class Game(Screen):
 
 
 class Rules(Screen):
-    pass
+    def __init__(self, **kwargs):
+        super(Rules, self).__init__(**kwargs)
+        self.layout = BoxLayout(orientation='vertical', padding=10, spacing=10)
+
+        self.rules_label = Label(text='Правила и инструкции', font_size=30)
+        self.layout.add_widget(self.rules_label)
+
+        self.rules_text = '''Здесь вы можете добавить инструкции.'''
+
+        self.rules = Label(text=self.rules_text, font_size=18, halign='left', valign='top')
+        self.rules.text_size = self.rules.size
+        self.layout.add_widget(self.rules)
+
+        self.back_button = Button(text='Назад', size_hint=(1, 0.2), on_release=self.back_to_main_menu)
+        self.layout.add_widget(self.back_button)
+
+        self.add_widget(self.layout)
+
+    def back_to_main_menu(self, *args):
+        self.manager.current = 'main_menu'
 
 
 class MyApp(App):
