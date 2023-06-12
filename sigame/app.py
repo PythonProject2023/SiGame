@@ -158,7 +158,7 @@ class CreateGame(Screen):
         server_proc.start()
         time.sleep(0.3)
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.connect(('localhost', 1321))
+        sock.connect(('localhost', 1323))
         sock.send(("master__oogway\n").encode())
         sock.recv(4096)
         sock.send((password + '\n').encode())
@@ -220,7 +220,7 @@ class JoinGame(Screen):
         password = self.password.text
         player_name = self.player_name.text
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.connect(('localhost', 1321))
+        sock.connect(('localhost', 1323))
         sock.send((f"{player_name}\n").encode())
         res = sock.recv(4096).decode()
         if res == 'sorry':
@@ -588,14 +588,14 @@ class Game(Screen):
         # Далее, перед добавлением любого виджета на какой-либо layout
         # он будет добавляться в какую-то ячейку словаря widgets
         widgets = {'buttons': {}, 'labels': {}, 'text_fields': {}, 'layouts': {}}
-        layout = BoxLayout(orientation='vertical')
+        layout = BoxLayout(orientation='vertical', padding=15)
         # текущий список игроков, включая ведущего и нас
         players = game_params["players"]
         # колво игроков
         cur_players = len(players)
         # максимально допустимое число игроков (указано при создании пати)
         players_count = game_params["players_count"]
-        players_layout = GridLayout(rows=2, cols=players_count + 1, spacing=10)
+        players_layout = GridLayout(rows=2, cols=players_count+1, spacing=15, padding=15)
         for p in range(players_count):
             # если текущий индекс есть в фактическом массиве игроков,
             # то берем имя от туда, иначе шаблон: "player_i"
@@ -604,15 +604,20 @@ class Game(Screen):
             else:
                 cur_text = f"player_{p}"
             # Лейблы с именами игроков
-            cur_label = Label(text=cur_text, font_size=20)
+            cur_label = Label(text=cur_text, font_size=40,  color=LIGHT_ORANGE, height=100, size_hint_y=None)
             widgets['labels'].setdefault('players', {})
             widgets['labels']['players'][cur_text] = cur_label
             players_layout.add_widget(cur_label)
 
         button_exit = Button(
-            text='Exit',
-            background_color=RED,
-            on_release=self.switch_to_screen(master),)
+                    text='Exit',
+                    background_color=RED,
+                    on_release=self.switch_to_screen(master),
+                    background_normal='',
+                    font_size=40,
+                    size=(150,100),
+                    size_hint=(None,None)
+                )
         players_layout.add_widget(button_exit)
 
         for p in range(players_count):
@@ -623,7 +628,7 @@ class Game(Screen):
             else:
                 cur_text = f"player_{p}"
                 game_params["cur_players"].append(None)
-            cur_label = Label(text='0', font_size=20)
+            cur_label = Label(text='0', font_size=40,  color=LIGHT_ORANGE, height=100, size_hint_y=None)
             widgets['labels'].setdefault('scores', {})
             widgets['labels']['scores'][cur_text] = cur_label
             players_layout.add_widget(cur_label)
