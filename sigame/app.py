@@ -13,13 +13,14 @@ from kivy.uix.screenmanager import Screen, ScreenManager
 from kivy.uix.slider import Slider
 from kivy.uix.textinput import TextInput
 from functools import partial
-from .server import server_starter
+from sigame.server import server_starter
 import multiprocessing
 import threading
 import time
 import socket
 import shlex
 import gettext
+import os
 
 
 # сокет
@@ -779,7 +780,7 @@ class MyApp(App):
         else:
             self.current_lang = 'ru'
 
-        self.lang = gettext.translation('myapp', localedir='locale', languages=[self.current_lang])
+        self.lang = gettext.translation('myapp', os.path.join(os.path.dirname(__file__), "locale"), languages=[self.current_lang])
         self.lang.install()
         self.update_text(self.manager)
 

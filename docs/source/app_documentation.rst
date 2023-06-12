@@ -1,6 +1,6 @@
 Техническая документация графического интерфейса
 ================================================
 
-.. automodule:: app
+.. automodule:: sigame.app
    :members:
    :private-members:
