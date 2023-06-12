@@ -244,6 +244,155 @@ def accept_button(player_name):
     return func
 
 
+def client_read(player_name):
+    """Функция, читающая из сокета и меняющая интерфейс
+      в соответсвии с получаемыми сообщениями (для обычных игроков)"""
+    global sock, widgets, game_params, active_score, flag_passive, flag_timer
+    time.sleep(0.1)
+    while True:
+        # получаем сообщение и разбиавем его на части
+        res = sock.recv(8192)
+        res_str= res.decode()
+        res = shlex.split(res_str)
+        match res[0]:
+            case "choose":
+            # сообщение от сервера начинается с choose, если кто-то выбрал кнопку с ценой вопроса
+            # соответсвенно далее - изменения интерфейса после этого события
+            # общий формат сообщения от сервера следующий:
+            # choose - res[0] <theme> - res[1] <question_cost> - res[2]
+                flag_passive = False
+                active_score = res[2]
+                widgets['buttons']['questions'][res[1]][res[2]].text = ''
+                widgets['buttons']['questions'][res[1]][res[2]].on_release = empty_func
+                widgets['text_fields']['answer'].background_color = white
+                widgets['text_fields']['answer'].readonly = False
+                widgets['buttons']['answer'].background_color = green
+                widgets['buttons']['answer'].color = 'black'
+                widgets['buttons']['answer'].text = 'Ответить'
+                widgets['buttons']['answer'].font_size = 40
+                new_func = answer_button(player_name)
+                widgets['buttons']['answer'].on_release = new_func
+                # Локаль
+                widgets['labels']['q_label'].text = f"ТЕКСТ ВОПРОСА: {game_params['table'][res[1]][res[2]][0]}"
+                widgets['labels']['q_label'].text_size = widgets['labels']['q_label'].size
+                widgets['labels']['q_label'].font_size = 20
+                # Локаль
+                widgets['labels']['info'].text = f"info: ТЕКУЩИЙ ВОПРОС: {[res[1]]}, {[res[2]]}"
+                widgets['labels']['info'].text_size = widgets['labels']['info'].size
+                widgets['labels']['timer'].text = '00:30'
+                flag_timer = True
+            case "answer":
+            # сообщение от сервера начинается с answer, если кто-то из игроков отослал ответ ведущему
+            # общий формат сообщения от сервера следующий:
+            # answer - res[0] <имя ответчика> - res[1] <сам по себе ответ> - res[2]
+                flag_timer = False
+                if res[1] != player_name:
+                    widgets['buttons']['answer'].background_color = red
+                    widgets['buttons']['answer'].on_release = empty_func
+                    # Локаль
+                    widgets['labels']['info'].text = f"Игрок {res[1]} ответил: {res[2]}"
+                    widgets['labels']['info'].text_size = widgets['labels']['info'].size
+            case "verdict":
+            # сообщение от сервера начинается с verdict, если ведущий нажал на кнопку принять или отклонить
+            # общий формат сообщения от сервера следующий:
+            # verdict - res[0] <accept/reject> - res[1] <имя игрока> - res[2] 
+                if res[1] == 'accept':
+                    flag_passive = True
+                    widgets['labels']['q_label'].text = ""
+                    if res[2] == player_name:
+                        # Локаль
+                        widgets['labels']['info'].text = "info: Ваш ответ правильный"
+                    else:
+                        # Локаль
+                        widgets['labels']['info'].text = f"info: Игрок {res[2]} ответил правильно"
+                    widgets['labels']['info'].text_size = widgets['labels']['info'].size
+                    new_score = int(widgets['labels']['scores'][res[2]].text) + int(active_score)
+                    widgets['labels']['scores'][res[2]].text = str(new_score)
+                    widgets['text_fields']['answer'].background_color = (0, 0, 0, 1/255)
+                    widgets['text_fields']['answer'].text = ''
+                    widgets['buttons']['answer'].background_color = red
+                    widgets['buttons']['answer'].text = ''
+                    widgets['text_fields']['answer'].readonly = True
+                    new_func = empty_func
+                    widgets['buttons']['answer'].on_release = new_func
+                    widgets['labels']['q_label'].text = ""
+                    widgets['labels']['timer'].text = '00:00'
+                    # если пришло сообщение о конце раунда
+                else:
+                    if res[2] == player_name:
+                        # Локаль
+                        widgets['labels']['info'].text = "info: Ваш ответ неправтльный"
+                    else:
+                        # Локаль
+                        widgets['labels']['info'].text = f"info: Игрок {res[2]} ответил неправильно"
+                        if widgets['buttons']['answer'] != '':
+                            widgets['buttons']['answer'].background_color = green
+                            new_func = answer_button(player_name)
+                            widgets['buttons']['answer'].on_release = new_func
+                    widgets['labels']['info'].text_size = widgets['labels']['info'].size
+                    if None in game_params['cur_players']:
+                        check_ind = game_params['cur_players'].index(None)-1
+                    else:
+                        check_ind = game_params['players_count']-1
+                    # res[3] есть только в случае rejecta и в нем 
+                    # содержится счетчик reject_counts от сервера
+                    if check_ind == int(res[3]):
+                        flag_passive = True
+                        widgets['labels']['q_label'].text = ""
+                        widgets['text_fields']['answer'].background_color = (0, 0, 0, 1/255)
+                        widgets['text_fields']['answer'].text = ''
+                        widgets['buttons']['answer'].background_color = red
+                        widgets['buttons']['answer'].text = ''
+                        widgets['text_fields']['answer'].readonly = True
+                        new_func = empty_func
+                        widgets['buttons']['answer'].on_release = new_func
+                        widgets['labels']['timer'].text = '00:00'
+                    else:
+                        flag_timer = True
+                if res[-1] == 'next':
+                        request = 'give me a pack'
+                        sock.send((request+'\n').encode())
+            case "give":
+                max_score = 0
+                winner = 'master_oogway'
+                for pl in widgets['labels']['scores']:
+                    cur_score = int(widgets['labels']['scores'][pl].text)
+                    if cur_score > max_score:
+                        max_score = cur_score
+                        winner = pl
+                widgets['labels']['info'].text = f"Игрок {winner} победил в игре"
+                widgets['labels']['info'].text_size = widgets['labels']['info'].size
+                return True
+                
+            case "finish":
+                flag_timer = False
+                flag_passive = True
+                widgets['labels']['info'].text = f"info: time has gone"
+                widgets['labels']['info'].text_size = widgets['labels']['info'].size
+                widgets['labels']['q_label'].text = ""
+                widgets['text_fields']['answer'].background_color = (0, 0, 0, 1/255)
+                widgets['text_fields']['answer'].text = ''
+                widgets['buttons']['answer'].background_color = red
+                widgets['buttons']['answer'].text = ''
+                widgets['text_fields']['answer'].readonly = True
+                new_func = empty_func
+                widgets['buttons']['answer'].on_release = new_func
+                widgets['labels']['timer'].text = '00:00'    
+            case "connect":
+            # сообщение от сервера начинается с connect, если кто-то подключился
+            # общий формат сообщения от сервера следующий:
+            # connect- res[0] <Имя игрока> - res[1] 
+                # Локаль
+                widgets['labels']['info'].text = f"info: Игрок {res[1]} подключился"
+                widgets['labels']['info'].text_size = widgets['labels']['info'].size
+                free_place = game_params['cur_players'].index(None)
+                game_params['cur_players'][free_place] = res[1]
+                widgets['labels']['players'][f"player_{free_place}"].text = res[1]
+                widgets['labels']['players'][res[1]] = widgets['labels']['players'][f"player_{free_place}"]
+                widgets['labels']['scores'][res[1]] = widgets['labels']['scores'][f"player_{free_place}"]
+    return True
+
+
 class Game(Screen): 
     def __init__(self, master, player_name, **kwargs):
         global widgets, game_params
