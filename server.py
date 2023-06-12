@@ -83,6 +83,49 @@ async def SIG(reader, writer):
     # создаем два задания: на чтение и на запись
     send = asyncio.create_task(reader.readline())
     receive = asyncio.create_task(clients[name].get())
+    
+    while not reader.at_eof():
+        # обрабатываем выполненные задания с учетом того, что они могут закончиться одновременно
+        done, pending = await asyncio.wait([send, receive], return_when=asyncio.FIRST_COMPLETED)
+        for q in done:
+            if q is send:
+                send = asyncio.create_task(reader.readline())
+                cur_rcv = q.result().decode()
+                cur_cmd = shlex.split(cur_rcv)
+                if len(cur_cmd) != 0:
+                    if cur_cmd[0] == "choose":
+                        question_counter += 1
+                    elif question_counter == target_questions and cur_cmd[0] == "verdict":
+                        cur_rcv += ' next'
+                    elif cur_cmd[0] == "give":
+                        cur_round = get_round(p_path)
+                        cur_rcv = f"give {cur_round}\n"
+                    for cur_name in clients:
+                        await clients[cur_name].put(cur_rcv)
+            elif q is receive:
+                # достаем результат из очереди и посылаем его клиенту
+                receive = asyncio.create_task(clients[name].get())
+                cur_rcv = q.result()
+                print(f"SERVER GOT {cur_rcv}")
+                writer.write(cur_rcv.encode())
+                await writer.drain()
+        else:
+            continue
+        break
+    # закрываем соединение
+    send.cancel()
+    receive.cancel()
+
+    writer.write("quit".encode())
+    await writer.drain()
+
+    del clients[name]
+    writer.close()
+    await writer.wait_closed()
+
+    await clients[cur_name].put(("{} has disconnected").format(name))
+
+    return True
 
 
 async def main(game_name, real_password, package_path, players_count):
