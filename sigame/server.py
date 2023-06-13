@@ -11,7 +11,7 @@ password = 'password'
 game_params = None
 question_counter = 0
 target_questions = 0
-cur_round = 1
+cur_round = 0
 p_path = ''
 
 
