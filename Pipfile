@@ -5,6 +5,14 @@ name = "pypi"
 
 [packages]
 kivy = "*"
+doit = "*"
+build = "*"
+pycodestyle = "*"
+flake8 = "*"
+pyflakes = "*"
+pydocstyle = "*"
+babel = "*"
+pytest = "*"
 
 [dev-packages]
 
