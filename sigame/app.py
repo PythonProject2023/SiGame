@@ -788,7 +788,7 @@ class MyApp(App):
         """Функция для смены языка на виджетах."""
         if widget is None:
             widget = self.root
-        if hasattr(widget, 'text') and not isinstance(widget, TextInput):
+        if hasattr(widget, 'text') and not isinstance(widget, TextInput) and widget.text:
             widget.text = _(widget.text)
 
         for child in widget.children:
