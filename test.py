@@ -34,7 +34,7 @@ class TestApp(unittest.TestCase):
     def test_2_answer_button(self):
         f = app.answer_button('test')
         f()
-        exp_call = [unittest.mock.call(("answer test text\n").encode())]
+        exp_call = [unittest.mock.call(("choose 'прекрасный дагестан' 300\n").encode()), unittest.mock.call(("answer test 'text'\n").encode())]
         self.sock.send.assert_has_calls(exp_call)
         
     def test_3_reject_button(self):
