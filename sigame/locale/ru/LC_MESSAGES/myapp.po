@@ -1,0 +1,106 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+
+msgid "My game"
+msgstr "Своя игра"
+
+msgid "Create game"
+msgstr "Создать игру"
+
+msgid "Join game"
+msgstr "Присоединиться к игре"
+
+msgid "Rules"
+msgstr "Правила"
+
+msgid "Change language"
+msgstr "Сменить язык"
+
+msgid "Exit"
+msgstr "Выход"
+
+msgid "Game name:"
+msgstr "Название игры:"
+
+msgid "Password:"
+msgstr "Пароль:"
+
+msgid "Number of players:"
+msgstr "Количество игроков:"
+
+msgid "Attach packet:"
+msgstr "Прикрепить пакет:"
+
+msgid "Create room"
+msgstr "Создать комнату"
+
+msgid "Your name:"
+msgstr "Ваше имя:"
+
+msgid "Join"
+msgstr "Присоединиться"
+
+msgid "Rules and instructions"
+msgstr "Правила и инструкции"
+
+msgid "Back"
+msgstr "Назад"
+
+msgid "Player"
+msgstr "Игрок"
+
+msgid "answered"
+msgstr "ответил"
+
+msgid "Question will be here"
+msgstr "Ищи вопрос тут"
+
+msgid "QUESTION TEXT"
+msgstr "ТЕКСТ ВОПРОСА"
+
+msgid "CURRENT QUESTION"
+msgstr "ТЕКУЩИЙ ВОПРОС"
+
+msgid "Your answer is correct"
+msgstr "Ваш ответ правильный"
+
+msgid "answered correctly"
+msgstr "ответил правильно"
+
+msgid "Your answer is incorrect"
+msgstr "Ваш ответ неправильный"
+
+msgid "answered incorrectly"
+msgstr "ответил неправильно"
+
+msgid "connected"
+msgstr "подключился"
+
+msgid "Correct answer"
+msgstr "Правильный ответ"
+
+msgid "Player's answer"
+msgstr "Ответ игрока"
+
+msgid "Correct answer:"
+msgstr "Верный ответ:"
+
+msgid "Accept"
+msgstr "Принять"
+
+msgid "Reject"
+msgstr "Отклонить"
+
+msgid "Password"
+msgstr "Пароль"
+
+msgid "incorrect password was entered"
+msgstr "Был введен неверный"
+
+msgid "won the game"
+msgstr "победил в игре"
+
+msgid "Time has gone"
+msgstr "Время вышло"
+
