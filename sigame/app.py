@@ -159,7 +159,7 @@ class CreateGame(Screen):
         server_proc.start()
         time.sleep(0.3)
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.connect(('localhost', 1327))
+        sock.connect(('localhost', 1337))
         sock.send(("master__oogway\n").encode())
         sock.recv(4096)
         sock.send((password + '\n').encode())
@@ -221,7 +221,7 @@ class JoinGame(Screen):
         password = self.password.text
         player_name = self.player_name.text
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.connect(('localhost', 1327))
+        sock.connect(('localhost', 1337))
         sock.send((f"{player_name}\n").encode())
         res = sock.recv(4096).decode()
         if res == 'sorry':
@@ -273,9 +273,9 @@ def answer_button(player_name):
     def func():
         # это будет происходить, если нажать на кнопку
         global sock
-        request = f"answer {player_name} {widgets['text_fields']['answer'].text}"
+        request = f"answer {player_name} '{widgets['text_fields']['answer'].text}'"
         widgets['text_fields']['answer'].background_color = (0, 0, 0, 1 / 255)
-        widgets['text_fields']['answer'].text = ' '
+        widgets['text_fields']['answer'].text = ''
         widgets['buttons']['answer'].background_color = GREY
         widgets['buttons']['answer'].text = ' '
         widgets['text_fields']['answer'].readonly = True
@@ -337,7 +337,7 @@ def client_read(player_name):
             # choose - res[0] <theme> - res[1] <question_cost> - res[2]
                 flag_passive = False
                 active_score = res[2]
-                widgets['buttons']['questions'][res[1]][res[2]].text = ' '
+                widgets['buttons']['questions'][res[1]][res[2]].text = ''
                 widgets['buttons']['questions'][res[1]][res[2]].on_release = empty_func
                 widgets['text_fields']['answer'].background_color = white
                 widgets['text_fields']['answer'].readonly = False
@@ -349,7 +349,7 @@ def client_read(player_name):
                 widgets['buttons']['answer'].on_release = new_func
                 widgets['labels']['q_label'].text = f"{_('ТЕКСТ ВОПРОСА')}: {game_params['table'][res[1]][res[2]][0]}"
                 widgets['labels']['q_label'].text_size = widgets['labels']['q_label'].size
-                widgets['labels']['q_label'].font_size = 20
+                widgets['labels']['q_label'].font_size = 40
                 widgets['labels']['info'].text = f"info: {_('ТЕКУЩИЙ ВОПРОС')}: {[res[1]]}, {[res[2]]}"
                 widgets['labels']['info'].text_size = widgets['labels']['info'].size
                 widgets['labels']['timer'].text = '00:30'
@@ -370,7 +370,7 @@ def client_read(player_name):
             # verdict - res[0] <accept/reject> - res[1] <имя игрока> - res[2]
                 if res[1] == 'accept':
                     flag_passive = True
-                    widgets['labels']['q_label'].text = " "
+                    widgets['labels']['q_label'].text = ""
                     if res[2] == player_name:
                         widgets['labels']['info'].text = f"info: {_('Ваш ответ правильный')}"
                     else:
@@ -379,13 +379,13 @@ def client_read(player_name):
                     new_score = int(widgets['labels']['scores'][res[2]].text) + int(active_score)
                     widgets['labels']['scores'][res[2]].text = str(new_score)
                     widgets['text_fields']['answer'].background_color = (0, 0, 0, 1 / 255)
-                    widgets['text_fields']['answer'].text = ' '
+                    widgets['text_fields']['answer'].text = ''
                     widgets['buttons']['answer'].background_color = GREY
-                    widgets['buttons']['answer'].text = ' '
+                    widgets['buttons']['answer'].text = ''
                     widgets['text_fields']['answer'].readonly = True
                     new_func = empty_func
                     widgets['buttons']['answer'].on_release = new_func
-                    widgets['labels']['q_label'].text = " "
+                    widgets['labels']['q_label'].text = ""
                     widgets['labels']['timer'].text = '00:00'
                     # если пришло сообщение о конце раунда
                 else:
@@ -408,7 +408,7 @@ def client_read(player_name):
                         flag_passive = True
                         widgets['labels']['q_label'].text = " "
                         widgets['text_fields']['answer'].background_color = (0, 0, 0, 1 / 255)
-                        widgets['text_fields']['answer'].text = ' '
+                        widgets['text_fields']['answer'].text = ''
                         widgets['buttons']['answer'].background_color = GREY
                         widgets['buttons']['answer'].text = ' '
                         widgets['text_fields']['answer'].readonly = True
@@ -427,7 +427,7 @@ def client_read(player_name):
                     cur_score = int(widgets['labels']['scores'][pl].text)
                     if cur_score > max_score:
                         max_score = cur_score
-                        winner = pl
+                        winner = widgets['labels']['players'][pl].text
                 widgets['labels']['info'].text = f"{_('Игрок')} {winner} {_('победил в игре')}"
                 widgets['labels']['info'].text_size = widgets['labels']['info'].size
                 return True
@@ -439,7 +439,7 @@ def client_read(player_name):
                 widgets['labels']['info'].text_size = widgets['labels']['info'].size
                 widgets['labels']['q_label'].text = " "
                 widgets['text_fields']['answer'].background_color = (0, 0, 0, 1 / 255)
-                widgets['text_fields']['answer'].text = ' '
+                widgets['text_fields']['answer'].text = ''
                 widgets['buttons']['answer'].background_color = GREY
                 widgets['buttons']['answer'].text = ' '
                 widgets['text_fields']['answer'].readonly = True
@@ -474,10 +474,10 @@ def master_read():
             case "choose":
                 reject_counts = 0
                 active_score = res[2]
-                widgets['buttons']['questions'][res[1]][res[2]].text = ''
+                widgets['buttons']['questions'][res[1]][res[2]].text = ' '
                 widgets['labels']['q_label'].text = f"{_('ТЕКСТ ВОПРОСА')}: {game_params['table'][res[1]][res[2]][0]}"
                 widgets['labels']['q_label'].text_size = widgets['labels']['q_label'].size
-                widgets['labels']['q_label'].font_size = 20
+                widgets['labels']['q_label'].font_size = 40
                 widgets['labels']['right_ans'].text = f"{_('Правильный ответ')}: {game_params['table'][res[1]][res[2]][1]}"
                 widgets['labels']['right_ans'].text_size = widgets['labels']['right_ans'].size
                 widgets['labels']['info'].text = f"info: {_('ТЕКУЩИЙ ВОПРОС')}: {[res[1]]}, {[res[2]]}"
@@ -634,7 +634,7 @@ class Game(Screen):
             widgets['labels']['scores'][cur_text] = cur_label
             players_layout.add_widget(cur_label)
 
-        game_field = GridLayout(cols=2, padding=10, spacing=10)
+        game_field = BoxLayout(orientation='horizontal', padding=10, spacing=500)
         q_table = GridLayout(
                 cols=game_params['table_size'][1]+1, 
                 padding=10, spacing=10, 
@@ -644,10 +644,11 @@ class Game(Screen):
         # Локаль
         q_label = Label(
             text='Ищи вопрос тут', 
-            font_size=40, 
-            outline_color=ORANGE, 
-            color=BLUE
+            font_size=40,
+            color=BLUE,
+            size_hint=(1, 1)
         )
+        q_label.size = q_label.texture_size
             
         for th in game_params['table']:
             # Лейблы с названиями тем
@@ -690,7 +691,7 @@ class Game(Screen):
         tmp_name = -1
         for _ in range(len(game_params['table']), game_params['table_size'][0]):
             cur_label = Label(text=' ', font_size=20)
-            cur_label.size = cur_label.size = (cur_label.texture_size[0] + 100, cur_label.texture_size[1] + 100)
+            cur_label.size = (cur_label.texture_size[0] + 100, cur_label.texture_size[1] + 100)
             widgets['buttons'].setdefault('questions', {})
             widgets['labels'].setdefault('themes', {})
             widgets['labels']['themes'][str(tmp_name)] = cur_label
@@ -716,12 +717,12 @@ class Game(Screen):
         game_field.add_widget(q_table)
         game_field.add_widget(q_label)
 
-        gamer_tools = BoxLayout(orientation='horizontal', padding=15, spacing=20)
+        gamer_tools = BoxLayout(orientation='horizontal', padding=30, spacing=30)
         # Лейбл для вывода сообщений через "info:"
-        timer = Label(text='00:00', size=(80, 80), font_text=80, color=RED)
+        timer = Label(text='00:00', size=(80, 80), font_size=80, color=RED)
         widgets['labels']['timer'] = timer
         gamer_tools.add_widget(timer)
-        info = Label(text='info:', size=(30, 30), font_text=30)
+        info = Label(text='info:', size=(30, 30), font_size=30)
         widgets['labels']['info'] = info
         gamer_tools.add_widget(info)
 
@@ -882,7 +883,7 @@ class MyApp(App):
         """Функция для смены языка на виджетах."""
         if widget is None:
             widget = self.root
-        if hasattr(widget, 'text') and not isinstance(widget, TextInput):
+        if hasattr(widget, 'text') and not isinstance(widget, TextInput) and widget.text:
             widget.text = _(widget.text)
 
         for child in widget.children:
