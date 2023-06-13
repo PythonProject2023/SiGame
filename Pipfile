@@ -13,8 +13,11 @@ pyflakes = "*"
 pydocstyle = "*"
 babel = "*"
 pytest = "*"
+sphinx = "*"
 
 [dev-packages]
+autodoc = "*"
+pybabel = "*"
 
 [requires]
 python_version = "3.10"

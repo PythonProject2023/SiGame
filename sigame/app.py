@@ -22,7 +22,6 @@ import shlex
 import gettext
 import os
 from kivy.core.window import Window
-Window.clearcolor = (4 / 255, 81 / 255, 116 / 255, 1)
 
 
 # сокет
@@ -891,4 +890,5 @@ class MyApp(App):
 
 def main():
     """Функция для запуска интерфейса приложения."""
+    Window.clearcolor = (4 / 255, 81 / 255, 116 / 255, 1)
     MyApp().run()

@@ -31,7 +31,7 @@ def task_dist():
 
 def task_locale():
     return {
-        'actions': ['python sigame/utils/generate_translation.py', 'pybabel compile -d sigame/locale -D myapp'],
+        'actions': ['cd sigame && python utils/generate_translation.py', 'cd ..', 'pybabel compile -d sigame/locale -D myapp'],
         'file_dep': ['./sigame/locale/en/LC_MESSAGES/myapp.po', './sigame/locale/ru/LC_MESSAGES/myapp.po'],
         'targets': ['./sigame/locale/en/LC_MESSAGES/myapp.mo', './sigame/locale/ru/LC_MESSAGES/myapp.mo'],
         'verbosity': 2,
