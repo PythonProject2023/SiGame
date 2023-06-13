@@ -3,7 +3,10 @@ name = "SiGame"
 version = "0.0.1"
 description = "Intellectual game"
 requires-python = ">=3.10"
-authors = [{name = "AKIM", email = "example@mail.com"}]
+authors = [{name = "Алексей Волчанинов", email = "example@mail.com"},
+            {name = "Мария Голубкова", email = "example@mail.com"},
+            {name = "Екатерина Лычева", email = "example@mail.com"},
+            {name = "Игорь Ященко", email = "example@mail.com"}]
 keywords = ["SiGame", "project", "kivy"]
 classifiers = [
     "Development Status :: 4 - Beta",
